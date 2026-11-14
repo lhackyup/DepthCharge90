@@ -1,0 +1,2961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Depth Charge '90 - Naval & Submarine Strike</title>
+    <style>
+        /* 1990 Shareware / Amiga / DOS CRT Arcade Aesthetic */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: #0b0d17;
+            color: #e0e6ed;
+            font-family: 'Press Start 2P', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        /* Retro Monitor Bezel */
+        .arcade-cabinet {
+            background: #171a2b;
+            border: 4px solid #323852;
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: 0 0 40px rgba(0, 180, 255, 0.14), inset 0 0 18px rgba(0, 0, 0, 0.85);
+            max-width: 820px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0 4px;
+            gap: 8px;
+        }
+
+        .title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .title-badge {
+            font-size: clamp(11px, 2.5vw, 16px);
+            color: #ffbe0b;
+            text-shadow: 2px 2px #d90429;
+            letter-spacing: 1px;
+        }
+
+        .subtitle-badge {
+            font-size: clamp(7px, 1.5vw, 9px);
+            color: #00f5d4;
+            letter-spacing: 1px;
+        }
+
+        .audio-btn {
+            background: #252a40;
+            color: #8d99ae;
+            border: 2px solid #4a506b;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .audio-btn.active {
+            color: #06d6a0;
+            border-color: #06d6a0;
+        }
+
+        .audio-btn:hover {
+            filter: brightness(1.2);
+        }
+
+        /* Screen Container with Subtle Scanlines */
+        .screen-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            background: #000;
+            border: 4px solid #08090f;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.92);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            cursor: crosshair;
+        }
+
+        .crt-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.22) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* On-Screen Tactical Controls */
+        .controls-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 12px;
+            gap: 8px;
+        }
+
+        .ctrl-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .arcade-btn {
+            background: linear-gradient(180deg, #3a405a 0%, #232738 100%);
+            color: #fff;
+            border: 2px solid #5c648a;
+            border-bottom-width: 4px;
+            border-radius: 8px;
+            padding: 10px 10px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: clamp(8px, 1.8vw, 10px);
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .arcade-btn:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+
+        .arcade-btn.flip-btn {
+            background: linear-gradient(180deg, #2b5876 0%, #1d3557 100%);
+            border-color: #4ea8de;
+        }
+
+        .arcade-btn.drop-btn {
+            background: linear-gradient(180deg, #ef233c 0%, #9b0014 100%);
+            border-color: #ff758f;
+            flex-grow: 1;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .hint-text {
+            margin-top: 10px;
+            font-size: 8px;
+            color: #8d99ae;
+            text-align: center;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+
+<div class="arcade-cabinet">
+    <div class="header-bar">
+        <div class="title-group">
+            <div class="title-badge" id="titleBadge">DEPTH CHARGE '90</div>
+            <div class="subtitle-badge" id="subtitleBadge">NAVAL &amp; SUBMARINE STRIKE</div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+            <button id="theaterBtn" class="audio-btn">THEATER [T]</button>
+            <button id="scoresBtn" class="audio-btn">SCORES [H]</button>
+            <button id="muteBtn" class="audio-btn active">SOUND: ON</button>
+        </div>
+    </div>
+
+    <div class="screen-wrapper" id="screenWrapper">
+        <!-- Virtual low-res canvas (360x270) upscaled with crisp pixels -->
+        <canvas id="gameCanvas" width="360" height="270"></canvas>
+        <div class="crt-overlay"></div>
+    </div>
+
+    <!-- Tactile Arcade Buttons -->
+    <div class="controls-bar">
+        <div class="ctrl-group">
+            <button class="arcade-btn" id="btnSlow">SLOW DOWN (←)</button>
+            <button class="arcade-btn" id="btnFast">SPEED UP (→)</button>
+            <button class="arcade-btn flip-btn" id="btnFlip">FLIP DIR (I)</button>
+        </div>
+        <button class="arcade-btn drop-btn" id="btnDrop">DROP BOMB (SPACE)</button>
+    </div>
+
+    <div class="hint-text" id="hintText">
+        [SPACE / CLICK] Drop Depth Charge &nbsp;|&nbsp; [← →] Adjust Airspeed &nbsp;|&nbsp; [I] Flip &nbsp;|&nbsp; [T] Theater &nbsp;|&nbsp; [H] Hall of Fame
+    </div>
+</div>
+
+<script>
+/**
+ * DEPTH CHARGE '90
+ * 1990s Retro Arcade Naval & Submarine Strike
+ * Pure Vanilla JS + HTML5 Canvas + Procedural Web Audio API
+ */
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+// Virtual 16-bit resolution
+const W = 360;
+const H = 270;
+const WATER_LEVEL = 92; // Y coordinate of the ocean surface
+
+// ==========================================
+// 1. PROCEDURAL RETRO SYNTHESIZER (WEB AUDIO)
+// ==========================================
+class RetroAudio {
+    constructor() {
+        this.ctx = null;
+        this.muted = false;
+    }
+
+    init() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    toggleMute() {
+        this.muted = !this.muted;
+        return !this.muted;
+    }
+
+    // Falling bomb whistle / plasma discharge
+    playDrop() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const scnKey = currentScenarioKey || 'MODERN';
+
+        if (scnKey === 'SCIFI') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(1200, now);
+            osc.frequency.exponentialRampToValueAtTime(240, now + 0.28);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.005, now + 0.28);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.28);
+        } else if (scnKey === 'WWII') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(420, now);
+            osc.frequency.exponentialRampToValueAtTime(110, now + 0.38);
+            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.38);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.38);
+        } else {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(540, now);
+            osc.frequency.exponentialRampToValueAtTime(145, now + 0.34);
+            gain.gain.setValueAtTime(0.14, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.34);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.34);
+        }
+    }
+
+    // Water splash / plasma atmosphere burn
+    playSplash() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const scnKey = currentScenarioKey || 'MODERN';
+        const bufferSize = this.ctx.sampleRate * 0.22;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.4));
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = scnKey === 'SCIFI' ? 'highpass' : 'bandpass';
+        filter.frequency.setValueAtTime(scnKey === 'SCIFI' ? 1400 : 920, now);
+        filter.frequency.exponentialRampToValueAtTime(scnKey === 'SCIFI' ? 450 : 290, now + 0.22);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+    }
+
+    // Surface or underwater explosion boom
+    playExplosion(isDeep = false) {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const duration = 0.46;
+        const bufferSize = this.ctx.sampleRate * duration;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        // Muffled low-frequency boom when underwater
+        filter.frequency.setValueAtTime(isDeep ? 340 : 780, now);
+        filter.frequency.exponentialRampToValueAtTime(55, now + duration);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+    }
+
+    // Wave clear arcade jingle
+    playLevelUp() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [330, 440, 554, 659, 880];
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.075);
+            gain.gain.setValueAtTime(0.09, now + idx * 0.075);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.075 + 0.12);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.075);
+            osc.stop(now + idx * 0.075 + 0.12);
+        });
+    }
+
+    // Game over descending tone
+    playGameOver() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [311, 277, 233, 185];
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.16);
+            gain.gain.setValueAtTime(0.11, now + idx * 0.16);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.16 + 0.2);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.16);
+            osc.stop(now + idx * 0.16 + 0.2);
+        });
+    }
+
+    // Arcade UI blip for letter/menu cycling
+    playBlip(high = false) {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(high ? 740 : 440, now);
+        osc.frequency.exponentialRampToValueAtTime(high ? 880 : 350, now + 0.05);
+
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+    }
+
+    // High score fanfare
+    playFanfare() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [262, 330, 392, 523, 659];
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+            gain.gain.setValueAtTime(0.12, now + idx * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.005, now + idx * 0.09 + 0.16);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.09);
+            osc.stop(now + idx * 0.09 + 0.16);
+        });
+    }
+
+    // Flak anti-aircraft shell / orbital laser blast
+    playFlak() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const scnKey = currentScenarioKey || 'MODERN';
+
+        if (scnKey === 'SCIFI') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(1100, now);
+            osc.frequency.exponentialRampToValueAtTime(320, now + 0.12);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        } else if (scnKey === 'WWII') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.exponentialRampToValueAtTime(45, now + 0.14);
+            gain.gain.setValueAtTime(0.16, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        } else {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(240, now);
+            osc.frequency.exponentialRampToValueAtTime(65, now + 0.11);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+        }
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+    }
+
+    // Torpedo sonar chirp / ion pulse
+    playTorpedo() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const scnKey = currentScenarioKey || 'MODERN';
+
+        if (scnKey === 'SCIFI') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(1400, now);
+            osc.frequency.exponentialRampToValueAtTime(450, now + 0.12);
+            gain.gain.setValueAtTime(0.10, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        } else if (scnKey === 'WWII') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(650, now);
+            osc.frequency.exponentialRampToValueAtTime(950, now + 0.12);
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        } else {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(820, now);
+            osc.frequency.exponentialRampToValueAtTime(1240, now + 0.08);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        }
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.14);
+    }
+
+    // Aircraft hull taking damage
+    playPlaneHit() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const bufferSize = this.ctx.sampleRate * 0.28;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+        }
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(480, now);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.26, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start(now);
+    }
+
+    // Campaign victory fanfare
+    playVictory() {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [262, 330, 392, 523, 392, 523, 659, 784];
+        notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+            gain.gain.setValueAtTime(0.14, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.005, now + idx * 0.12 + 0.22);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 0.22);
+        });
+    }
+}
+
+const audio = new RetroAudio();
+
+// ==========================================
+// 2. PROCEDURAL PIXEL ART SPRITE MATRICES & SCENARIOS
+// ==========================================
+const PALETTE = {
+    '.': null,
+    'W': '#ffffff',
+    'K': '#11131a',
+    'R': '#ef233c',
+    'O': '#ff9f1c',
+    'Y': '#ffbe0b',
+    'G': '#8d99ae',
+    'D': '#4a506b',
+    'B': '#3a86ff',
+    'C': '#00f5d4',
+    'M': '#2b2d42',
+    'P': '#b5179e', // Neon purple/magenta for Sci-Fi
+    'E': '#7209b7', // Dark plasma purple
+    'L': '#4cc9f0', // Electric cyan for Sci-Fi
+    'S': '#556b2f', // Olive drab camo for WWII
+    'T': '#8b5a2b', // Rust/wood brown for WWII
+    'I': '#6c757d'  // Battleship steel grey for WWII
+};
+
+// --- MODERN 1990 SPRITES ---
+const SPRITE_PLANE = [
+    "RR..................R...",
+    "RRR................RRR..",
+    "RRRR....GGGGGG....RRRRR.",
+    ".RRRRGGGGWWWWGGGGGRRRRRW",
+    "..RRRRGGGGGGGGGGGGGGGRRW",
+    "...RRRRRRRRRRRRRRRRRRRR.",
+    "......DDDD....DDDD......"
+];
+
+const SPRITE_SHIP = [
+    "..........WW............",
+    "..........RR............",
+    ".......GGGGGGGG.........",
+    "......GWWWWWWWWG..G.....",
+    "....GGGGGGGGGGGGGGG.....",
+    "DDDDDDDDDDDDDDDDDDDDDDDD",
+    ".DDDDDDDDDDDDDDDDDDDDDD.",
+    "..MMMMMMMMMMMMMMMMMMMM.."
+];
+
+const SPRITE_SUB = [
+    ".........YY.........",
+    ".........YY.........",
+    "........YYYY........",
+    "....YYYYYYYYYYYY....",
+    ".RYYYYYYCYYCYYYYYYR.",
+    "RRYYYYYYYYYYYYYYYYRR",
+    ".RYYYYYYYYYYYYYYYYR.",
+    "....OOOOOOOOOOOO...."
+];
+
+const SPRITE_BOSS = [
+    "....................WW......................",
+    "....................RR......................",
+    "..............GGGGGGWWGGGGGG................",
+    "............GGWWWWWWWWWWWWWWGG..G...........",
+    "..........GGGGGGGGGGGGGGGGGGGGGGG.G.........",
+    "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    ".RRRRDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDRRRR.",
+    "..MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM.."
+];
+
+// --- WWII 1943 SPRITES ---
+const SPRITE_PLANE_WWII = [
+    "Y...................S...",
+    "YY...SSSSSSSS.....SSSY..",
+    "SYSSSSSSSSSSSSSSSSSSSSSY",
+    ".SSSSSGGGGWWWWGGGGSSSSSW",
+    "..SSSSSGGGGGGGGGGGGGSSSW",
+    "...SSSSSSSSSSSSSSSSSSSS.",
+    "......TTTT....TTTT......"
+];
+
+const SPRITE_SHIP_WWII = [
+    ".........WW.............",
+    ".........DD.GG..........",
+    "GG....IIIIIIIIIII....GG.",
+    "GGGG.IIWWWWWWWWIIII.GGGG",
+    ".IIIIIIIIIIIIIIIIIIIIII.",
+    "DDDDDDDDDDDDDDDDDDDDDDDD",
+    ".DDDDDDDDDDDDDDDDDDDDDD.",
+    "..TTTTTTTTTTTTTTTTTTTT.."
+];
+
+const SPRITE_SUB_WWII = [
+    ".........GG.........",
+    ".......GGGG.........",
+    ".....D.GGGG.........",
+    ".....DDGGGGGGGGGG...",
+    ".DDDDDDDDDDDDDDDDDD.",
+    "DDDDDDDDDDDDDDDDDDDD",
+    ".DDDDDDDDDDDDDDDDDD.",
+    "....KKKKKKKKKKKK...."
+];
+
+const SPRITE_BOSS_WWII = [
+    "....................DD......................",
+    "....................WW......................",
+    "GGGG..........IIIIIIIIIIII..........GGGG....",
+    "GGGGGG......IIWWWWWWWWWWWWII......GGGGGG....",
+    "..IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII....",
+    "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+    ".DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD.",
+    "..TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT.."
+];
+
+// --- SCI-FI 2190 ORBITAL SPRITES ---
+const SPRITE_PLANE_SCIFI = [
+    "..LL..................L.",
+    "LLLL.................LLL",
+    "LLLLLL..PPPPPPPP..LLLLLC",
+    ".LLLLLLPPPPWWWWPPPLLLLLC",
+    "..LLLLLLPPPPPPPPPPLLLLLC",
+    "...LLLLLLLLLLLLLLLLLLLC.",
+    "......CCCC....CCCC......"
+];
+
+const SPRITE_SHIP_SCIFI = [
+    "..........CC............",
+    "..........LL............",
+    ".......PPPPPPPP.........",
+    "......PWWWWWWWWP..P.....",
+    "....LLPPPPPPPPPPPPP.....",
+    "EEEEEEEEEEEEEEEEEEEEEEEE",
+    ".CCCCCCCCCCCCCCCCCCCCCC.",
+    "..PPPPPPPPPPPPPPPPPPPP.."
+];
+
+const SPRITE_SUB_SCIFI = [
+    ".........LL.........",
+    ".........LL.........",
+    "........LLLL........",
+    "....LLLLLLLLLLLL....",
+    ".PLLLLLLCLLCLLLLLLP.",
+    "PPLLLLLLLLLLLLLLLLPP",
+    ".PLLLLLLLLLLLLLLLLP.",
+    "....EEEEEEEEEEEE...."
+];
+
+const SPRITE_BOSS_SCIFI = [
+    "....................CC......................",
+    "....................LL......................",
+    "..............PPPPPPCCPPPPPP................",
+    "............PPWWWWWWWWWWWWWWPP..P...........",
+    "..........LLPPPPPPPPPPPPPPPPPPPPP.L.........",
+    "EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE",
+    ".CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCLLLL.",
+    "..PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.."
+];
+
+// --- SCENARIO PROFILES & METADATA ---
+const SCENARIOS = {
+    WWII: {
+        id: 'WWII',
+        tag: 'W43',
+        badge: 'ATLANTIC 1943',
+        subBadge: 'BATTLE OF THE ATLANTIC',
+        name: 'WWII 1943',
+        desc: 'AEROSILURANTE vs U-BOOT',
+        planeName: 'AEROSILURANTE A ELICA',
+        planeSprite: SPRITE_PLANE_WWII,
+        shipSprite: SPRITE_SHIP_WWII,
+        subSprite: SPRITE_SUB_WWII,
+        bossSprite: SPRITE_BOSS_WWII,
+        ammoName: 'DEPTH CHARGES',
+        ammoShort: 'CHARGES',
+        livesName: 'HULL',
+        mediumUpperName: 'OCEAN AIR',
+        mediumLowerName: 'NORTH ATLANTIC',
+        accentColor: '#dda15e',
+        bombColorAir: '#dda15e',
+        bombColorWater: '#6c757d'
+    },
+    MODERN: {
+        id: 'MODERN',
+        tag: 'M90',
+        badge: "DEPTH CHARGE '90",
+        subBadge: 'NAVAL & SUBMARINE STRIKE',
+        name: 'MODERN 1990',
+        desc: 'STRIKE JET vs NUCLEAR SUBS',
+        planeName: 'JET DA INTERDIZIONE',
+        planeSprite: SPRITE_PLANE,
+        shipSprite: SPRITE_SHIP,
+        subSprite: SPRITE_SUB,
+        bossSprite: SPRITE_BOSS,
+        ammoName: 'SMART BOMBS',
+        ammoShort: 'BOMBS',
+        livesName: 'HULL',
+        mediumUpperName: 'AIRSPACE',
+        mediumLowerName: 'PACIFIC DEEP',
+        accentColor: '#00f5d4',
+        bombColorAir: '#ffbe0b',
+        bombColorWater: '#00f5d4'
+    },
+    SCIFI: {
+        id: 'SCIFI',
+        tag: 'S90',
+        badge: 'ORBITAL 2190',
+        subBadge: 'ATMOSPHERIC PLANET RAID',
+        name: 'ORBITAL 2190',
+        desc: 'STAR CORVETTE vs DRONES',
+        planeName: 'STAR CORVETTE',
+        planeSprite: SPRITE_PLANE_SCIFI,
+        shipSprite: SPRITE_SHIP_SCIFI,
+        subSprite: SPRITE_SUB_SCIFI,
+        bossSprite: SPRITE_BOSS_SCIFI,
+        ammoName: 'PLASMA DARTS',
+        ammoShort: 'PLASMA',
+        livesName: 'SHIELDS',
+        mediumUpperName: 'HIGH ORBIT',
+        mediumLowerName: 'ALIEN ATMOSPHERE',
+        accentColor: '#b5179e',
+        bombColorAir: '#b5179e',
+        bombColorWater: '#4cc9f0'
+    }
+};
+
+const THEATER_KEYS = ['WWII', 'MODERN', 'SCIFI'];
+let currentScenarioKey = localStorage.getItem('depthCharge90_scenario') || 'MODERN';
+let selectedTheaterIndex = THEATER_KEYS.indexOf(currentScenarioKey);
+if (selectedTheaterIndex === -1) selectedTheaterIndex = 1;
+
+function getCurrentScenario() {
+    return SCENARIOS[currentScenarioKey] || SCENARIOS.MODERN;
+}
+
+function setScenario(key) {
+    if (SCENARIOS[key]) {
+        currentScenarioKey = key;
+        selectedTheaterIndex = THEATER_KEYS.indexOf(key);
+        if (selectedTheaterIndex === -1) selectedTheaterIndex = 1;
+        localStorage.setItem('depthCharge90_scenario', key);
+        const scn = SCENARIOS[key];
+        const titleBadge = document.getElementById('titleBadge');
+        const subtitleBadge = document.getElementById('subtitleBadge');
+        if (titleBadge) titleBadge.textContent = scn.badge;
+        if (subtitleBadge) subtitleBadge.textContent = scn.subBadge;
+    }
+}
+
+function drawMatrixSprite(matrix, x, y, flipX = false, scale = 1, flashWhite = false) {
+    const h = matrix.length;
+    const w = matrix[0].length;
+    const startX = Math.round(x - (w * scale) / 2);
+    const startY = Math.round(y - (h * scale) / 2);
+
+    for (let row = 0; row < h; row++) {
+        for (let col = 0; col < w; col++) {
+            const char = matrix[row][col];
+            const color = PALETTE[char];
+            if (!color) continue;
+
+            ctx.fillStyle = flashWhite ? '#ffffff' : color;
+            const drawCol = flipX ? (w - 1 - col) : col;
+            ctx.fillRect(
+                startX + drawCol * scale,
+                startY + row * scale,
+                scale,
+                scale
+            );
+        }
+    }
+}
+
+// ==========================================
+// 3. DUAL-MEDIUM PHYSICS & GAME STATE
+// ==========================================
+const PHYSICS = {
+    GRAVITY_AIR: 195,          // Gravity acceleration in air (px/s^2)
+    AIR_DRAG_X: 0.95,          // Light aerodynamic horizontal drag
+    SPLASH_DAMP_X: 0.40,       // Immediate horizontal velocity loss on water impact
+    SPLASH_DAMP_Y: 0.30,       // Immediate vertical velocity loss on water impact
+    GRAVITY_WATER: 48.75,      // Reduced underwater gravity (0.25x air gravity)
+    WATER_DRAG_X: 0.15,        // Strong viscous horizontal drag underwater
+    WATER_DRAG_Y: 0.35,        // Strong viscous vertical drag underwater
+    MAX_SINK_SPEED: 38         // Terminal underwater sinking speed (px/s)
+};
+
+let gameState = 'START'; // 'START', 'THEATER_SELECT', 'PLAYING', 'WAVE_CLEAR', 'GAMEOVER', 'GAME_VICTORY', 'ENTER_INITIALS', 'LEADERBOARD'
+let score = 0;
+let wave = 1;
+let bombsRemaining = 12;
+let waveClearTimer = 0;
+let lastWaveBonus = 0;
+let screenShake = 0;
+
+// Leaderboard state & persistent storage
+const DEFAULT_LEADERBOARD = [
+    { name: 'ACE', score: 3500, wave: 4, theater: 'M90' },
+    { name: 'SUB', score: 2400, wave: 3, theater: 'W43' },
+    { name: 'SKY', score: 1800, wave: 2, theater: 'S90' },
+    { name: 'BOM', score: 1200, wave: 2, theater: 'M90' },
+    { name: 'PIL', score: 800,  wave: 1, theater: 'W43' }
+];
+const MAX_LEADERBOARD_ENTRIES = 5;
+
+function loadLeaderboard() {
+    try {
+        const stored = localStorage.getItem('depthCharge90_leaderboard');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed;
+            }
+        }
+    } catch (e) {
+        console.warn('Could not parse leaderboard', e);
+    }
+    const oldHi = parseInt(localStorage.getItem('depthCharge90_hi') || '0', 10);
+    const list = DEFAULT_LEADERBOARD.map(e => ({ ...e }));
+    if (oldHi > list[0].score) {
+        list.unshift({ name: 'YOU', score: oldHi, wave: 1, theater: 'M90' });
+        list.pop();
+    }
+    return list;
+}
+
+function saveLeaderboard(list) {
+    try {
+        localStorage.setItem('depthCharge90_leaderboard', JSON.stringify(list));
+        if (list.length > 0) {
+            localStorage.setItem('depthCharge90_hi', list[0].score.toString());
+        }
+    } catch (e) {
+        console.warn('Could not save leaderboard', e);
+    }
+}
+
+let leaderboard = loadLeaderboard();
+let highScore = leaderboard.length > 0 ? leaderboard[0].score : 0;
+
+// Pilot Initials entry state
+const ALLOWED_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?-*";
+let initials = ['A', 'A', 'A'];
+let initialCursor = 0;
+let lastInsertedIndex = -1;
+
+function checkQualifiesForLeaderboard(currentScore) {
+    if (currentScore <= 0) return false;
+    if (leaderboard.length < MAX_LEADERBOARD_ENTRIES) return true;
+    return currentScore > leaderboard[leaderboard.length - 1].score;
+}
+
+function getLeaderboardRank(currentScore) {
+    let rank = 1;
+    for (const entry of leaderboard) {
+        if (currentScore > entry.score) break;
+        rank++;
+    }
+    return Math.min(rank, MAX_LEADERBOARD_ENTRIES);
+}
+
+function initEnterInitials() {
+    initials = ['A', 'A', 'A'];
+    initialCursor = 0;
+}
+
+function changeChar(delta) {
+    audio.playBlip(false);
+    let curIdx = ALLOWED_CHARS.indexOf(initials[initialCursor]);
+    if (curIdx === -1) curIdx = 0;
+    curIdx = (curIdx + delta + ALLOWED_CHARS.length) % ALLOWED_CHARS.length;
+    initials[initialCursor] = ALLOWED_CHARS[curIdx];
+}
+
+function advanceInitial() {
+    if (initialCursor < 2) {
+        audio.playBlip(true);
+        initialCursor++;
+    } else {
+        submitInitials();
+    }
+}
+
+function prevInitial() {
+    if (initialCursor > 0) {
+        audio.playBlip(false);
+        initialCursor--;
+    }
+}
+
+function submitInitials() {
+    const finalName = initials.join('');
+    const scn = getCurrentScenario();
+    const entry = {
+        name: finalName,
+        score: score,
+        wave: wave,
+        theater: scn.tag
+    };
+    leaderboard.push(entry);
+    leaderboard.sort((a, b) => b.score - a.score);
+    if (leaderboard.length > MAX_LEADERBOARD_ENTRIES) {
+        leaderboard = leaderboard.slice(0, MAX_LEADERBOARD_ENTRIES);
+    }
+    lastInsertedIndex = leaderboard.findIndex(e => e === entry);
+    saveLeaderboard(leaderboard);
+    highScore = leaderboard[0].score;
+    audio.playFanfare();
+    gameState = 'LEADERBOARD';
+    updateControlsUI();
+}
+
+// Input state
+const keys = {
+    left: false,
+    right: false
+};
+
+// 10 Progressive Mission Schemas (Sectors 1 - 10)
+const LEVELS_CONFIG = [
+    {
+        id: 1,
+        title: "BAIA TRANQUILLA",
+        subtitle: "SECTOR 1: TRANQUIL BAY",
+        theme: "DAY",
+        bombs: 14,
+        speedMult: 1.0,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 24, hp: 1, points: 100 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: -28, hp: 1, points: 120 },
+            { type: 'SUB',  y: WATER_LEVEL + 55, vx: -25, hp: 1, points: 200 },
+            { type: 'SUB',  y: WATER_LEVEL + 95, vx: 22,  hp: 1, points: 250 }
+        ],
+        flakRate: 0,
+        torpedoRate: 0,
+        evasive: false
+    },
+    {
+        id: 2,
+        title: "STRETTO DI PATTUGLIA",
+        subtitle: "SECTOR 2: PATROL STRAIT",
+        theme: "SUNSET",
+        bombs: 15,
+        speedMult: 1.15,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 30, hp: 1, points: 120 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: -35, hp: 1, points: 150 },
+            { type: 'SUB',  y: WATER_LEVEL + 48, vx: -30, hp: 1, points: 220 },
+            { type: 'SUB',  y: WATER_LEVEL + 85, vx: 26,  hp: 1, points: 260 },
+            { type: 'SUB',  y: WATER_LEVEL + 125, vx: -28, hp: 1, points: 300 }
+        ],
+        flakRate: 0,
+        torpedoRate: 0,
+        evasive: false
+    },
+    {
+        id: 3,
+        title: "ALLARME PERISCOPI",
+        subtitle: "SECTOR 3: PERISCOPE ALERT",
+        theme: "DAY",
+        bombs: 13,
+        speedMult: 1.30,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 34, hp: 1, points: 150 },
+            { type: 'SUB',  y: WATER_LEVEL + 42, vx: -36, hp: 1, points: 240 },
+            { type: 'SUB',  y: WATER_LEVEL + 78, vx: 32,  hp: 1, points: 280 },
+            { type: 'SUB',  y: WATER_LEVEL + 110, vx: -30, hp: 1, points: 320 },
+            { type: 'SUB',  y: WATER_LEVEL + 138, vx: 28,  hp: 1, points: 350 }
+        ],
+        flakRate: 0,
+        torpedoRate: 3.8,
+        evasive: false
+    },
+    {
+        id: 4,
+        title: "CANALE NOTTURNO",
+        subtitle: "SECTOR 4: NIGHT RAID",
+        theme: "NIGHT",
+        bombs: 12,
+        speedMult: 1.45,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 42, hp: 1, points: 180 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: -46, hp: 1, points: 200 },
+            { type: 'SUB',  y: WATER_LEVEL + 52, vx: -40, hp: 1, points: 280 },
+            { type: 'SUB',  y: WATER_LEVEL + 90, vx: 38,  hp: 1, points: 320 },
+            { type: 'SUB',  y: WATER_LEVEL + 130, vx: -35, hp: 1, points: 360 }
+        ],
+        flakRate: 0,
+        torpedoRate: 3.2,
+        evasive: false
+    },
+    {
+        id: 5,
+        title: "ZONA DI FUOCO (FLAK)",
+        subtitle: "SECTOR 5: FLAK FIRE ZONE",
+        theme: "SUNSET",
+        bombs: 12,
+        speedMult: 1.35,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 36, hp: 1, points: 200 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: -40, hp: 1, points: 220 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 44, hp: 1, points: 240 },
+            { type: 'SUB',  y: WATER_LEVEL + 65, vx: -32, hp: 1, points: 300 },
+            { type: 'SUB',  y: WATER_LEVEL + 115, vx: 30, hp: 1, points: 350 }
+        ],
+        flakRate: 2.8,
+        torpedoRate: 0,
+        evasive: false
+    },
+    {
+        id: 6,
+        title: "FOSSA PROFONDA",
+        subtitle: "SECTOR 6: ABYSSAL TRENCH",
+        theme: "DAY",
+        bombs: 14,
+        speedMult: 1.50,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 38, hp: 2, maxHp: 2, points: 350 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: -42, hp: 2, maxHp: 2, points: 350 },
+            { type: 'SUB',  y: WATER_LEVEL + 60, vx: 38, hp: 1, points: 300 },
+            { type: 'SUB',  y: WATER_LEVEL + 105, vx: -36, hp: 1, points: 340 },
+            { type: 'SUB',  y: WATER_LEVEL + 142, vx: 42, hp: 1, points: 400 }
+        ],
+        flakRate: 3.0,
+        torpedoRate: 3.0,
+        evasive: false
+    },
+    {
+        id: 7,
+        title: "INCROCIO TEMPESTOSO",
+        subtitle: "SECTOR 7: STORMY STRAIT",
+        theme: "STORM",
+        bombs: 13,
+        speedMult: 1.70,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 50, hp: 1, points: 260 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: -54, hp: 1, points: 280 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 48, hp: 1, points: 260 },
+            { type: 'SUB',  y: WATER_LEVEL + 50, vx: -48, hp: 1, points: 340 },
+            { type: 'SUB',  y: WATER_LEVEL + 95, vx: 46,  hp: 1, points: 380 },
+            { type: 'SUB',  y: WATER_LEVEL + 130, vx: -44, hp: 1, points: 420 }
+        ],
+        flakRate: 2.6,
+        torpedoRate: 2.5,
+        evasive: true
+    },
+    {
+        id: 8,
+        title: "ASSALTO WOLFPACK",
+        subtitle: "SECTOR 8: WOLFPACK ASSAULT",
+        theme: "NIGHT",
+        bombs: 14,
+        speedMult: 1.85,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 45, hp: 3, maxHp: 3, points: 500 },
+            { type: 'SUB',  y: WATER_LEVEL + 40, vx: -55, hp: 1, points: 350 },
+            { type: 'SUB',  y: WATER_LEVEL + 65, vx: 52,  hp: 1, points: 370 },
+            { type: 'SUB',  y: WATER_LEVEL + 90, vx: -50, hp: 1, points: 390 },
+            { type: 'SUB',  y: WATER_LEVEL + 115, vx: 48, hp: 1, points: 420 },
+            { type: 'SUB',  y: WATER_LEVEL + 138, vx: -46, hp: 1, points: 450 }
+        ],
+        flakRate: 2.2,
+        torpedoRate: 1.8,
+        evasive: true
+    },
+    {
+        id: 9,
+        title: "BARRIERA SILURANTE",
+        subtitle: "SECTOR 9: TORPEDO BARRIER",
+        theme: "SUNSET",
+        bombs: 11,
+        speedMult: 2.0,
+        targets: [
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: 58, hp: 2, maxHp: 2, points: 450 },
+            { type: 'SHIP', y: WATER_LEVEL - 3, vx: -62, hp: 2, maxHp: 2, points: 450 },
+            { type: 'SUB',  y: WATER_LEVEL + 45, vx: -60, hp: 1, points: 400 },
+            { type: 'SUB',  y: WATER_LEVEL + 80, vx: 58,  hp: 1, points: 440 },
+            { type: 'SUB',  y: WATER_LEVEL + 115, vx: -56, hp: 1, points: 480 },
+            { type: 'SUB',  y: WATER_LEVEL + 142, vx: 62, hp: 1, points: 520 }
+        ],
+        flakRate: 1.8,
+        torpedoRate: 1.5,
+        evasive: true
+    },
+    {
+        id: 10,
+        title: "OPERAZIONE LEVIATANO",
+        subtitle: "SECTOR 10: FLAGSHIP LEVIATHAN",
+        theme: "STORM",
+        bombs: 14,
+        speedMult: 1.6,
+        targets: [
+            { type: 'BOSS', y: WATER_LEVEL - 5, vx: 25, hp: 5, maxHp: 5, points: 1500, width: 44, height: 12 },
+            { type: 'SUB',  y: WATER_LEVEL + 45, vx: -45, hp: 1, points: 450 },
+            { type: 'SUB',  y: WATER_LEVEL + 75, vx: 50,  hp: 1, points: 480 },
+            { type: 'SUB',  y: WATER_LEVEL + 110, vx: -48, hp: 1, points: 520 },
+            { type: 'SUB',  y: WATER_LEVEL + 140, vx: 52, hp: 1, points: 600 }
+        ],
+        flakRate: 1.4,
+        torpedoRate: 1.6,
+        evasive: true
+    }
+];
+
+// Bomber aircraft entity
+const plane = {
+    x: 40,
+    y: 34,
+    dir: 1,              // 1 = right, -1 = left
+    baseSpeed: 85,
+    currentSpeed: 85,
+    minSpeed: 42,
+    maxSpeed: 160,
+    width: 24,
+    height: 7,
+    lives: 3,
+    maxLives: 3,
+    invulnerableTimer: 0
+};
+
+let bombs = [];
+const MAX_ACTIVE_BOMBS = 2;
+let targets = [];
+let enemyProjectiles = [];
+let particles = [];
+let floatingTexts = [];
+let flakTimer = 0;
+let torpedoTimer = 0;
+let gameOverReason = '';
+let clouds = [
+    { x: 50, y: 18, w: 34, speed: 6 },
+    { x: 180, y: 26, w: 46, speed: 4 },
+    { x: 300, y: 15, w: 28, speed: 8 }
+];
+
+// ==========================================
+// 4. WAVE & MISSION MANAGEMENT
+// ==========================================
+function startGame() {
+    audio.init();
+    score = 0;
+    wave = 1;
+    plane.lives = 3;
+    plane.invulnerableTimer = 0;
+    enemyProjectiles = [];
+    bombs = [];
+    particles = [];
+    floatingTexts = [];
+    lastInsertedIndex = -1;
+    gameOverReason = '';
+    plane.x = 30;
+    plane.y = 32;
+    plane.dir = 1;
+    plane.baseSpeed = 85;
+    plane.currentSpeed = 85;
+    spawnWave(wave);
+    gameState = 'PLAYING';
+    updateControlsUI();
+}
+
+function spawnWave(waveNum) {
+    const levelIdx = Math.max(0, Math.min(waveNum - 1, LEVELS_CONFIG.length - 1));
+    const cfg = LEVELS_CONFIG[levelIdx];
+
+    targets = [];
+    enemyProjectiles = [];
+    bombs = [];
+    flakTimer = cfg.flakRate ? cfg.flakRate * 0.7 : 0;
+    torpedoTimer = cfg.torpedoRate ? cfg.torpedoRate * 0.7 : 0;
+    bombsRemaining = cfg.bombs;
+
+    const count = cfg.targets.length;
+    const spacing = (W - 80) / Math.max(1, count - 1);
+
+    cfg.targets.forEach((t, idx) => {
+        const xPos = 40 + idx * spacing + (Math.random() - 0.5) * 20;
+        const width = t.type === 'BOSS' ? 44 : (t.type === 'SHIP' ? 24 : 20);
+        const height = t.type === 'BOSS' ? 10 : 8;
+
+        targets.push({
+            type: t.type,
+            x: Math.max(25, Math.min(W - 25, xPos)),
+            y: t.y,
+            vx: t.vx * (cfg.speedMult || 1),
+            width: width,
+            height: height,
+            hp: t.hp || 1,
+            maxHp: t.maxHp || t.hp || 1,
+            points: t.points,
+            hitTimer: 0,
+            evasive: !!cfg.evasive
+        });
+    });
+}
+
+function flipPlaneDirection() {
+    if (gameState !== 'PLAYING') return;
+    plane.dir *= -1;
+}
+
+function dropBomb() {
+    if (gameState !== 'PLAYING') return;
+    if (bombs.length >= MAX_ACTIVE_BOMBS) return;
+    if (bombsRemaining <= 0) return;
+
+    bombsRemaining--;
+    audio.playDrop();
+
+    // Bomb inherits the aircraft's instantaneous horizontal velocity
+    const planeVx = plane.currentSpeed * plane.dir;
+
+    bombs.push({
+        x: plane.x,
+        y: plane.y + 5,
+        vx: planeVx,
+        vy: 14, // Slight initial downward release velocity
+        inWater: false,
+        bubbleTimer: 0,
+        angle: Math.atan2(14, planeVx)
+    });
+}
+
+// ==========================================
+// 5. PARTICLE & VISUAL EFFECTS
+// ==========================================
+function spawnSplash(x, y) {
+    audio.playSplash();
+    const scn = getCurrentScenario();
+    for (let i = 0; i < 16; i++) {
+        const angle = -Math.PI * (0.15 + Math.random() * 0.7);
+        const speed = 25 + Math.random() * 55;
+        let color = i % 2 === 0 ? '#ffffff' : '#90e0ef';
+        if (scn.id === 'SCIFI') {
+            color = i % 2 === 0 ? '#f72585' : '#4cc9f0';
+        } else if (scn.id === 'WWII') {
+            color = i % 2 === 0 ? '#ffffff' : '#adb5bd';
+        }
+        particles.push({
+            x: x + (Math.random() - 0.5) * 6,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.35 + Math.random() * 0.25,
+            maxLife: 0.6,
+            color: color,
+            size: 2,
+            gravity: 140
+        });
+    }
+}
+
+function spawnBubble(x, y) {
+    const scn = getCurrentScenario();
+    let color = '#caf0f8';
+    if (scn.id === 'SCIFI') color = '#4cc9f0';
+    else if (scn.id === 'WWII') color = '#e2e8f0';
+
+    particles.push({
+        x: x + (Math.random() - 0.5) * 3,
+        y: y,
+        vx: (Math.random() - 0.5) * 6,
+        vy: -18 - Math.random() * 14, // Bubbles rise toward the surface
+        life: 1.2,
+        maxLife: 1.2,
+        color: color,
+        size: 1,
+        gravity: 0,
+        isBubble: true
+    });
+}
+
+function spawnExplosion(x, y, isUnderwater) {
+    audio.playExplosion(isUnderwater);
+    screenShake = 0.25;
+    const scn = getCurrentScenario();
+    let colors;
+    if (scn.id === 'SCIFI') {
+        colors = isUnderwater
+            ? ['#ffffff', '#4cc9f0', '#7209b7', '#f72585']
+            : ['#ffffff', '#f72585', '#b5179e', '#4cc9f0'];
+    } else if (scn.id === 'WWII') {
+        colors = isUnderwater
+            ? ['#ffffff', '#dda15e', '#bc6c25', '#212529']
+            : ['#ffffff', '#ffbe0b', '#dc2f02', '#212529'];
+    } else {
+        colors = isUnderwater
+            ? ['#ffffff', '#00f5d4', '#ffbe0b', '#ff5400']
+            : ['#ffffff', '#ffbe0b', '#ff5400', '#ef233c'];
+    }
+
+    for (let i = 0; i < 28; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 15 + Math.random() * 75;
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            life: 0.4 + Math.random() * 0.35,
+            maxLife: 0.75,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: Math.random() > 0.4 ? 2 : 3,
+            gravity: isUnderwater ? -10 : 60
+        });
+    }
+}
+
+function addFloatingText(x, y, text, color = '#ffbe0b') {
+    floatingTexts.push({
+        x,
+        y,
+        text,
+        color,
+        life: 1.0
+    });
+}
+
+// ==========================================
+// 6. MAIN GAME UPDATE LOGIC
+// ==========================================
+function update(dt) {
+    // Drifting clouds
+    clouds.forEach(c => {
+        c.x += c.speed * dt;
+        if (c.x - c.w > W) c.x = -c.w;
+    });
+
+    if (screenShake > 0) {
+        screenShake = Math.max(0, screenShake - dt);
+    }
+
+    // Update particles & floating texts even during wave transition
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.life -= dt;
+        if (p.life <= 0 || (p.isBubble && p.y <= WATER_LEVEL)) {
+            particles.splice(i, 1);
+            continue;
+        }
+        p.vy += (p.gravity || 0) * dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+    }
+
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        const ft = floatingTexts[i];
+        ft.life -= dt;
+        ft.y -= 14 * dt;
+        if (ft.life <= 0) {
+            floatingTexts.splice(i, 1);
+        }
+    }
+
+    // Target hit timers
+    targets.forEach(t => {
+        if (t.hitTimer > 0) t.hitTimer -= dt;
+    });
+
+    // Wave Clear intermission
+    if (gameState === 'WAVE_CLEAR') {
+        waveClearTimer -= dt;
+        if (waveClearTimer <= 0) {
+            wave++;
+            spawnWave(wave);
+            gameState = 'PLAYING';
+            updateControlsUI();
+        }
+        return;
+    }
+
+    if (gameState !== 'PLAYING') return;
+
+    const currentCfg = LEVELS_CONFIG[Math.min(wave - 1, LEVELS_CONFIG.length - 1)];
+
+    // Aircraft airspeed adjustment via Left/Right keys or buttons
+    let targetSpeed = plane.baseSpeed + (wave - 1) * 6;
+    if (keys.right) {
+        targetSpeed = plane.dir === 1 ? plane.maxSpeed : plane.minSpeed;
+    } else if (keys.left) {
+        targetSpeed = plane.dir === -1 ? plane.maxSpeed : plane.minSpeed;
+    }
+    plane.currentSpeed += (targetSpeed - plane.currentSpeed) * 8 * dt;
+
+    // Aircraft horizontal flight & screen wrap
+    plane.x += plane.currentSpeed * plane.dir * dt;
+    if (plane.dir === 1 && plane.x > W + 18) {
+        plane.x = -18;
+        plane.y = 26 + Math.random() * 14;
+    } else if (plane.dir === -1 && plane.x < -18) {
+        plane.x = W + 18;
+        plane.y = 26 + Math.random() * 14;
+    }
+
+    // Plane invulnerability cooldown
+    if (plane.invulnerableTimer > 0) {
+        plane.invulnerableTimer = Math.max(0, plane.invulnerableTimer - dt);
+    }
+
+    // Surface ships and submarines movement
+    targets.forEach(t => {
+        t.x += t.vx * dt;
+        if (t.vx > 0 && t.x > W + 25) t.x = -25;
+        if (t.vx < 0 && t.x < -25) t.x = W + 25;
+    });
+
+    // Enemy Flak contraerea spawning (from surface ships or boss)
+    if (currentCfg.flakRate > 0) {
+        flakTimer -= dt;
+        if (flakTimer <= 0) {
+            const surfaceShooters = targets.filter(t => t.type === 'SHIP' || t.type === 'BOSS');
+            if (surfaceShooters.length > 0) {
+                const shooter = surfaceShooters[Math.floor(Math.random() * surfaceShooters.length)];
+                enemyProjectiles.push({
+                    type: 'FLAK',
+                    x: shooter.x + (Math.random() - 0.5) * (shooter.width * 0.6),
+                    y: shooter.y - 4,
+                    vx: (Math.random() - 0.5) * 24,
+                    vy: -135 - Math.random() * 25,
+                    targetY: plane.y + (Math.random() - 0.5) * 16,
+                    life: 1.2
+                });
+                audio.playFlak();
+            }
+            flakTimer = currentCfg.flakRate * (0.8 + Math.random() * 0.4);
+        }
+    }
+
+    // Enemy Torpedo spawning (from submarines)
+    if (currentCfg.torpedoRate > 0) {
+        torpedoTimer -= dt;
+        if (torpedoTimer <= 0) {
+            const subs = targets.filter(t => t.type === 'SUB');
+            if (subs.length > 0) {
+                const shooter = subs[Math.floor(Math.random() * subs.length)];
+                enemyProjectiles.push({
+                    type: 'TORPEDO',
+                    x: shooter.x + (Math.random() - 0.5) * 6,
+                    y: shooter.y - 4,
+                    vx: 0,
+                    vy: -40,
+                    bubbleTimer: 0.1
+                });
+                audio.playTorpedo();
+            }
+            torpedoTimer = currentCfg.torpedoRate * (0.8 + Math.random() * 0.4);
+        }
+    }
+
+    // Update enemy projectiles (Flak & Torpedoes)
+    for (let i = enemyProjectiles.length - 1; i >= 0; i--) {
+        const ep = enemyProjectiles[i];
+        ep.x += ep.vx * dt;
+        ep.y += ep.vy * dt;
+
+        if (ep.type === 'FLAK') {
+            // Flak detonates at plane altitude or top screen
+            if (ep.y <= ep.targetY || ep.y <= 16) {
+                spawnExplosion(ep.x, ep.y, false);
+                // Check collision with aircraft
+                const dx = Math.abs(ep.x - plane.x);
+                const dy = Math.abs(ep.y - plane.y);
+                if (dx < (plane.width / 2 + 5) && dy < (plane.height / 2 + 6)) {
+                    if (plane.invulnerableTimer <= 0) {
+                        plane.lives--;
+                        plane.invulnerableTimer = 1.8;
+                        audio.playPlaneHit();
+                        spawnExplosion(plane.x, plane.y, false);
+                        screenShake = 0.45;
+                        addFloatingText(plane.x, plane.y - 12, 'HULL HIT! -1', '#ef233c');
+
+                        if (plane.lives <= 0) {
+                            gameOverReason = 'AIRCRAFT SHOT DOWN!';
+                            audio.playGameOver();
+                            gameState = 'GAMEOVER';
+                            updateControlsUI();
+                            enemyProjectiles.splice(i, 1);
+                            return;
+                        }
+                    }
+                }
+                enemyProjectiles.splice(i, 1);
+                continue;
+            }
+        } else if (ep.type === 'TORPEDO') {
+            ep.bubbleTimer -= dt;
+            if (ep.bubbleTimer <= 0) {
+                spawnBubble(ep.x, ep.y);
+                ep.bubbleTimer = 0.12;
+            }
+
+            // Check collision with player bombs (interception)
+            let intercepted = false;
+            for (let bIdx = bombs.length - 1; bIdx >= 0; bIdx--) {
+                const b = bombs[bIdx];
+                if (Math.abs(b.x - ep.x) < 9 && Math.abs(b.y - ep.y) < 9) {
+                    spawnExplosion(ep.x, ep.y, true);
+                    addFloatingText(ep.x, ep.y - 8, 'INTERCEPTED!', '#00f5d4');
+                    bombs.splice(bIdx, 1);
+                    intercepted = true;
+                    break;
+                }
+            }
+            if (intercepted) {
+                enemyProjectiles.splice(i, 1);
+                continue;
+            }
+
+            // Torpedo reaches waterline surface
+            if (ep.y <= WATER_LEVEL) {
+                spawnSplash(ep.x, WATER_LEVEL);
+                enemyProjectiles.splice(i, 1);
+                continue;
+            }
+        }
+    }
+
+    // Depth charge bomb physics update
+    for (let i = bombs.length - 1; i >= 0; i--) {
+        const b = bombs[i];
+
+        // 1. Air-to-Water Splash Transition
+        if (!b.inWater && b.y >= WATER_LEVEL) {
+            b.inWater = true;
+            b.vx *= PHYSICS.SPLASH_DAMP_X;
+            b.vy *= PHYSICS.SPLASH_DAMP_Y;
+            spawnSplash(b.x, WATER_LEVEL);
+
+            // Evasive maneuver trigger for nearby submarines (Sector 7+)
+            if (currentCfg.evasive) {
+                targets.forEach(t => {
+                    if (t.type === 'SUB' && t.evasive) {
+                        const dist = Math.abs(t.x - b.x);
+                        if (dist < 44 && Math.random() < 0.75) {
+                            t.vx = (t.x < b.x ? -1 : 1) * Math.abs(t.vx) * 1.25;
+                            spawnBubble(t.x, t.y);
+                        }
+                    }
+                });
+            }
+        }
+
+        // 2. Medium-specific Forces
+        if (b.inWater) {
+            b.vy += PHYSICS.GRAVITY_WATER * dt;
+            b.vx *= Math.pow(PHYSICS.WATER_DRAG_X, dt);
+            b.vy *= Math.pow(PHYSICS.WATER_DRAG_Y, dt);
+
+            if (b.vy > PHYSICS.MAX_SINK_SPEED) {
+                b.vy = PHYSICS.MAX_SINK_SPEED;
+            }
+
+            const targetAngle = Math.atan2(b.vy, b.vx);
+            b.angle += (targetAngle - b.angle) * 6 * dt;
+
+            b.bubbleTimer -= dt;
+            if (b.bubbleTimer <= 0) {
+                spawnBubble(b.x, b.y - 2);
+                b.bubbleTimer = 0.08 + Math.random() * 0.08;
+            }
+        } else {
+            b.vy += PHYSICS.GRAVITY_AIR * dt;
+            b.vx *= Math.pow(PHYSICS.AIR_DRAG_X, dt);
+            b.angle = Math.atan2(b.vy, b.vx);
+        }
+
+        // Integrate position
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+
+        // Remove if off-screen or hits seafloor
+        if (b.x < -10 || b.x > W + 10 || b.y > H - 12) {
+            if (b.y > H - 12) {
+                spawnExplosion(b.x, H - 14, true);
+            }
+            bombs.splice(i, 1);
+            continue;
+        }
+
+        // 3. Collision Check against Ships, Boss and Submarines
+        let hit = false;
+        for (let j = targets.length - 1; j >= 0; j--) {
+            const t = targets[j];
+            const dx = Math.abs(b.x - t.x);
+            const dy = Math.abs(b.y - t.y);
+
+            if (dx < (t.width / 2 + 4) && dy < (t.height / 2 + 4)) {
+                hit = true;
+                t.hp--;
+                t.hitTimer = 0.25;
+
+                if (t.hp <= 0) {
+                    score += t.points;
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('depthCharge90_hi', highScore.toString());
+                    }
+                    spawnExplosion(t.x, t.y, t.type === 'SUB');
+                    addFloatingText(t.x, t.y - 8, `+${t.points}`);
+                    targets.splice(j, 1);
+                } else {
+                    // Armored target or boss damaged
+                    audio.playExplosion(t.type === 'SUB');
+                    spawnExplosion(b.x, b.y, t.type === 'SUB');
+                    addFloatingText(t.x, t.y - 10, `HP:${t.hp}`, '#ff9f1c');
+                }
+                break;
+            }
+        }
+
+        if (hit) {
+            bombs.splice(i, 1);
+        }
+    }
+
+    // Check Wave Clear condition
+    if (targets.length === 0) {
+        if (wave >= 10) {
+            // Full 10-Sector Campaign Victory!
+            lastWaveBonus = bombsRemaining * 100 + plane.lives * 500;
+            score += lastWaveBonus;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('depthCharge90_hi', highScore.toString());
+            }
+            bombs = [];
+            enemyProjectiles = [];
+            audio.playVictory();
+            gameState = 'GAME_VICTORY';
+            updateControlsUI();
+            return;
+        }
+
+        lastWaveBonus = bombsRemaining * 50;
+        score += lastWaveBonus;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('depthCharge90_hi', highScore.toString());
+        }
+        bombs = [];
+        enemyProjectiles = [];
+        audio.playLevelUp();
+        waveClearTimer = 2.6;
+        gameState = 'WAVE_CLEAR';
+        return;
+    }
+
+    // Check Out of Ammo Game Over condition
+    if (bombsRemaining === 0 && bombs.length === 0 && targets.length > 0) {
+        gameOverReason = 'OUT OF AMMO!';
+        audio.playGameOver();
+        gameState = 'GAMEOVER';
+        updateControlsUI();
+    }
+}
+
+// ==========================================
+// 7. PIXEL ART RENDERER
+// ==========================================
+function draw() {
+    ctx.save();
+
+    // Screen shake on explosions
+    if (screenShake > 0) {
+        const mag = screenShake * 14;
+        ctx.translate((Math.random() - 0.5) * mag, (Math.random() - 0.5) * mag);
+    }
+
+    const scn = getCurrentScenario();
+    const currentCfg = LEVELS_CONFIG[Math.min(wave - 1, LEVELS_CONFIG.length - 1)];
+    const theme = currentCfg.theme || 'DAY';
+
+    // 1. Atmosphere / Medium Upper Layer Rendering
+    if (scn.id === 'SCIFI') {
+        // High Orbit / Deep Space Medium
+        ctx.fillStyle = '#06030e';
+        ctx.fillRect(0, 0, W, 32);
+        ctx.fillStyle = '#0c071d';
+        ctx.fillRect(0, 32, W, 28);
+        ctx.fillStyle = '#170b2c';
+        ctx.fillRect(0, 60, W, WATER_LEVEL - 60);
+
+        // Distant Ringed Planet
+        ctx.fillStyle = '#7209b7';
+        ctx.fillRect(302, 14, 16, 16);
+        ctx.fillStyle = '#f72585';
+        ctx.fillRect(305, 17, 10, 10);
+        // Planetary Ring
+        ctx.fillStyle = '#4cc9f0';
+        ctx.fillRect(294, 21, 32, 2);
+        ctx.fillRect(296, 20, 28, 1);
+        ctx.fillRect(296, 23, 28, 1);
+
+        // Twinkling Multi-spectrum Stars
+        const sciStars = [
+            { x: 14, y: 8, c: '#4cc9f0' }, { x: 42, y: 22, c: '#ffffff' },
+            { x: 88, y: 12, c: '#f72585' }, { x: 124, y: 28, c: '#b5179e' },
+            { x: 168, y: 9, c: '#ffffff' }, { x: 210, y: 25, c: '#4cc9f0' },
+            { x: 248, y: 14, c: '#7209b7' }, { x: 280, y: 30, c: '#ffffff' },
+            { x: 338, y: 18, c: '#f72585' }
+        ];
+        sciStars.forEach((st, idx) => {
+            const flicker = Math.floor((Date.now() + idx * 280) / 300) % 2 === 0;
+            ctx.fillStyle = flicker ? '#ffffff' : st.c;
+            ctx.fillRect(st.x, st.y, 1, 1);
+        });
+
+        // Glowing Ionized Nebula wisps
+        ctx.fillStyle = 'rgba(114, 9, 183, 0.45)';
+        clouds.forEach(c => {
+            ctx.fillRect(Math.round(c.x), c.y, c.w, 4);
+            ctx.fillRect(Math.round(c.x + 6), c.y - 2, c.w - 12, 3);
+        });
+    } else if (scn.id === 'WWII') {
+        // North Atlantic Overcast 1943
+        ctx.fillStyle = '#2b3642';
+        ctx.fillRect(0, 0, W, 32);
+        ctx.fillStyle = '#3a4959';
+        ctx.fillRect(0, 32, W, 28);
+        ctx.fillStyle = '#4f6274';
+        ctx.fillRect(0, 60, W, WATER_LEVEL - 60);
+
+        // Filtered Pale Sun through storm clouds
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(298, 16, 16, 16);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(300, 18, 12, 12);
+
+        // Heavy dark storm/smoke clouds
+        ctx.fillStyle = '#1e293b';
+        clouds.forEach(c => {
+            ctx.fillRect(Math.round(c.x), c.y, c.w, 6);
+            ctx.fillRect(Math.round(c.x + 4), c.y - 4, c.w - 8, 4);
+        });
+    } else {
+        // MODERN 1990 Dynamic Weather Themes
+        if (theme === 'SUNSET') {
+            ctx.fillStyle = '#370617';
+            ctx.fillRect(0, 0, W, 32);
+            ctx.fillStyle = '#6a040f';
+            ctx.fillRect(0, 32, W, 25);
+            ctx.fillStyle = '#9d0208';
+            ctx.fillRect(0, 57, W, 20);
+            ctx.fillStyle = '#dc2f02';
+            ctx.fillRect(0, 77, W, WATER_LEVEL - 77);
+
+            // Sinking Crimson Sun
+            ctx.fillStyle = '#ff5400';
+            ctx.fillRect(295, 20, 22, 16);
+            ctx.fillStyle = '#d90429';
+            ctx.fillRect(297, 22, 18, 12);
+        } else if (theme === 'NIGHT') {
+            ctx.fillStyle = '#050814';
+            ctx.fillRect(0, 0, W, 45);
+            ctx.fillStyle = '#0a0f24';
+            ctx.fillRect(0, 45, W, 30);
+            ctx.fillStyle = '#101633';
+            ctx.fillRect(0, 75, W, WATER_LEVEL - 75);
+
+            // Twinkling stars
+            const stars = [18, 52, 92, 138, 172, 218, 255, 290, 335];
+            stars.forEach((sx, idx) => {
+                const sy = 8 + (idx * 9) % 36;
+                const flicker = Math.floor((Date.now() + idx * 250) / 320) % 2 === 0;
+                ctx.fillStyle = flicker ? '#ffffff' : '#4a506b';
+                ctx.fillRect(sx, sy, 1, 1);
+            });
+
+            // Crescent Pixel Moon
+            ctx.fillStyle = '#ffbe0b';
+            ctx.fillRect(315, 14, 11, 11);
+            ctx.fillStyle = '#050814';
+            ctx.fillRect(312, 12, 9, 11);
+        } else if (theme === 'STORM') {
+            ctx.fillStyle = '#181b24';
+            ctx.fillRect(0, 0, W, 36);
+            ctx.fillStyle = '#252936';
+            ctx.fillRect(0, 36, W, 32);
+            ctx.fillStyle = '#313647';
+            ctx.fillRect(0, 68, W, WATER_LEVEL - 68);
+
+            // Heavy Rain streaks
+            ctx.strokeStyle = 'rgba(168, 218, 220, 0.35)';
+            ctx.lineWidth = 1;
+            const rainTick = (Date.now() / 2.5) % 360;
+            for (let rx = -W; rx < W * 2; rx += 22) {
+                ctx.beginPath();
+                const sx = (rx + rainTick * 0.6) % (W + 40);
+                const sy = (rainTick * 1.6) % WATER_LEVEL;
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx - 5, sy + 11);
+                ctx.stroke();
+            }
+        } else {
+            // Standard DAY theme
+            ctx.fillStyle = '#1d3557';
+            ctx.fillRect(0, 0, W, 35);
+            ctx.fillStyle = '#2b5876';
+            ctx.fillRect(0, 35, W, 30);
+            ctx.fillStyle = '#457b9d';
+            ctx.fillRect(0, 65, W, WATER_LEVEL - 65);
+
+            // Pixel Sun
+            ctx.fillStyle = '#ffbe0b';
+            ctx.fillRect(305, 16, 18, 18);
+            ctx.fillStyle = '#fb5607';
+            ctx.fillRect(307, 18, 14, 14);
+        }
+
+        // Clouds
+        ctx.fillStyle = theme === 'NIGHT' ? '#1d2238' : (theme === 'STORM' ? '#3d4457' : (theme === 'SUNSET' ? '#6a040f' : '#a8dadc'));
+        clouds.forEach(c => {
+            ctx.fillRect(Math.round(c.x), c.y, c.w, 6);
+            ctx.fillRect(Math.round(c.x + 4), c.y - 4, c.w - 8, 4);
+        });
+    }
+
+    // 2. Lower Medium Depth Layers & Transition Boundary
+    if (scn.id === 'SCIFI') {
+        // Dense Alien Atmosphere Medium
+        ctx.fillStyle = '#1a042d';
+        ctx.fillRect(0, WATER_LEVEL, W, 55);
+        ctx.fillStyle = '#2b0647';
+        ctx.fillRect(0, WATER_LEVEL + 55, W, 65);
+        ctx.fillStyle = '#120220';
+        ctx.fillRect(0, WATER_LEVEL + 120, W, H - (WATER_LEVEL + 120));
+
+        // Ionospheric Entry Plasma Shield Horizon
+        const shieldPulse = Math.floor(Date.now() / 140) % 2 === 0;
+        ctx.fillStyle = shieldPulse ? '#4cc9f0' : '#f72585';
+        ctx.fillRect(0, WATER_LEVEL - 1, W, 2);
+        ctx.fillStyle = '#7209b7';
+        const waveOffset = Math.floor(Date.now() / 130) % 12;
+        for (let x = -12; x < W + 12; x += 12) {
+            ctx.fillRect(x + waveOffset, WATER_LEVEL - 2, 6, 3);
+        }
+
+        // Planetary Crust / Cyber Crystal Grid Floor
+        ctx.fillStyle = '#1f0d38';
+        ctx.fillRect(0, H - 12, W, 12);
+        ctx.fillStyle = '#7209b7';
+        ctx.fillRect(0, H - 12, W, 2);
+        for (let x = 0; x < W; x += 16) {
+            ctx.fillStyle = '#4cc9f0';
+            ctx.fillRect(x + 6, H - 16, 2, 6);
+            ctx.fillStyle = '#f72585';
+            ctx.fillRect(x + 5, H - 18, 4, 2);
+        }
+    } else if (scn.id === 'WWII') {
+        // Cold North Atlantic Ocean Depths
+        ctx.fillStyle = '#132433';
+        ctx.fillRect(0, WATER_LEVEL, W, 55);
+        ctx.fillStyle = '#0b1620';
+        ctx.fillRect(0, WATER_LEVEL + 55, W, 65);
+        ctx.fillStyle = '#060c13';
+        ctx.fillRect(0, WATER_LEVEL + 120, W, H - (WATER_LEVEL + 120));
+
+        // Choppy Atlantic Froth Waves
+        const waveOffset = Math.floor(Date.now() / 180) % 8;
+        ctx.fillStyle = '#e2e8f0';
+        for (let x = -8; x < W + 8; x += 8) {
+            ctx.fillRect(x + waveOffset, WATER_LEVEL - 1, 4, 2);
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(x + waveOffset + 2, WATER_LEVEL, 3, 1);
+            ctx.fillStyle = '#e2e8f0';
+        }
+
+        // Jagged Rocky Silt Seabed
+        ctx.fillStyle = '#262d33';
+        ctx.fillRect(0, H - 12, W, 12);
+        ctx.fillStyle = '#475569';
+        for (let x = 0; x < W; x += 14) {
+            ctx.fillRect(x, H - 14, 5, 4);
+        }
+    } else {
+        // MODERN 1990 Pacific Depths
+        if (theme === 'SUNSET') {
+            ctx.fillStyle = '#241a3e';
+            ctx.fillRect(0, WATER_LEVEL, W, 55);
+            ctx.fillStyle = '#161129';
+            ctx.fillRect(0, WATER_LEVEL + 55, W, 65);
+            ctx.fillStyle = '#0d091a';
+            ctx.fillRect(0, WATER_LEVEL + 120, W, H - (WATER_LEVEL + 120));
+        } else if (theme === 'NIGHT') {
+            ctx.fillStyle = '#041329';
+            ctx.fillRect(0, WATER_LEVEL, W, 55);
+            ctx.fillStyle = '#020b17';
+            ctx.fillRect(0, WATER_LEVEL + 55, W, 65);
+            ctx.fillStyle = '#01050d';
+            ctx.fillRect(0, WATER_LEVEL + 120, W, H - (WATER_LEVEL + 120));
+        } else if (theme === 'STORM') {
+            ctx.fillStyle = '#102331';
+            ctx.fillRect(0, WATER_LEVEL, W, 55);
+            ctx.fillStyle = '#091620';
+            ctx.fillRect(0, WATER_LEVEL + 55, W, 65);
+            ctx.fillStyle = '#040c13';
+            ctx.fillRect(0, WATER_LEVEL + 120, W, H - (WATER_LEVEL + 120));
+        } else {
+            ctx.fillStyle = '#0077b6';
+            ctx.fillRect(0, WATER_LEVEL, W, 55);
+            ctx.fillStyle = '#023e8a';
+            ctx.fillRect(0, WATER_LEVEL + 55, W, 65);
+            ctx.fillStyle = '#03045e';
+            ctx.fillRect(0, WATER_LEVEL + 120, W, H - (WATER_LEVEL + 120));
+        }
+
+        // Animated Waterline Waves (choppier in STORM)
+        const waveOffset = Math.floor(Date.now() / 170) % 8;
+        ctx.fillStyle = theme === 'SUNSET' ? '#ff9f1c' : (theme === 'STORM' ? '#7097a8' : '#90e0ef');
+        const waveHeight = theme === 'STORM' ? 3 : 2;
+        for (let x = -8; x < W + 8; x += 8) {
+            ctx.fillRect(x + waveOffset, WATER_LEVEL - 1, 4, waveHeight);
+        }
+
+        // Sandy Seafloor
+        ctx.fillStyle = '#5c4d3c';
+        ctx.fillRect(0, H - 12, W, 12);
+        ctx.fillStyle = '#7f6a52';
+        for (let x = 0; x < W; x += 12) {
+            ctx.fillRect(x, H - 12, 6, 2);
+        }
+    }
+
+    // 3. Draw Targets (Ships, Boss & Submarines with Scenario Sprites)
+    targets.forEach(t => {
+        const flip = t.vx < 0;
+        const isFlashing = t.hitTimer > 0;
+        if (t.type === 'BOSS') {
+            drawMatrixSprite(scn.bossSprite, t.x, t.y, flip, 1, isFlashing);
+        } else if (t.type === 'SHIP') {
+            drawMatrixSprite(scn.shipSprite, t.x, t.y, flip, 1, isFlashing);
+        } else {
+            drawMatrixSprite(scn.subSprite, t.x, t.y, flip, 1, isFlashing);
+        }
+
+        // Draw Health Pips for armored targets and Boss
+        if (t.maxHp > 1) {
+            const pipW = 4;
+            const gap = 2;
+            const totalW = t.maxHp * pipW + (t.maxHp - 1) * gap;
+            const startX = Math.round(t.x - totalW / 2);
+            const pipY = Math.round(t.y - t.height / 2 - 5);
+            for (let h = 0; h < t.maxHp; h++) {
+                ctx.fillStyle = h < t.hp ? '#06d6a0' : '#ef233c';
+                ctx.fillRect(startX + h * (pipW + gap), pipY, pipW, 2);
+            }
+        }
+    });
+
+    // 4. Draw Player Craft (blinking when invulnerable)
+    if (plane.invulnerableTimer <= 0 || Math.floor(Date.now() / 80) % 2 === 0) {
+        drawMatrixSprite(scn.planeSprite, plane.x, plane.y, plane.dir === -1, 1);
+    }
+
+    // 5. Draw Depth Charge Bombs / Plasma with velocity tilt
+    bombs.forEach(b => {
+        ctx.save();
+        ctx.translate(Math.round(b.x), Math.round(b.y));
+        ctx.rotate(b.angle);
+        if (scn.id === 'SCIFI') {
+            // Plasma Dart with pulsating core
+            const pulse = Math.floor(Date.now() / 90) % 2 === 0;
+            ctx.fillStyle = b.inWater ? '#4cc9f0' : '#b5179e';
+            ctx.fillRect(-3, -3, 6, 6);
+            ctx.fillStyle = pulse ? '#ffffff' : '#f72585';
+            ctx.fillRect(-1, -1, 3, 3);
+            ctx.fillStyle = b.inWater ? '#7209b7' : '#480ca8';
+            ctx.fillRect(-5, -1, 2, 2);
+        } else if (scn.id === 'WWII') {
+            // Cylindrical depth charge drum
+            ctx.fillStyle = b.inWater ? '#495057' : '#6c757d';
+            ctx.fillRect(-4, -2, 8, 5);
+            ctx.fillStyle = '#dda15e';
+            ctx.fillRect(-1, -2, 2, 5);
+            ctx.fillStyle = '#212529';
+            ctx.fillRect(-4, -2, 1, 5);
+            ctx.fillRect(3, -2, 1, 5);
+        } else {
+            // MODERN Finned Bomb
+            ctx.fillStyle = b.inWater ? '#00f5d4' : '#ffbe0b';
+            ctx.fillRect(-3, -2, 6, 4);
+            ctx.fillStyle = '#ef233c';
+            ctx.fillRect(2, -1, 2, 2);
+            ctx.fillStyle = '#8d99ae';
+            ctx.fillRect(-4, -3, 2, 6);
+        }
+        ctx.restore();
+    });
+
+    // 6. Draw Enemy Projectiles (Flak & Torpedoes with Scenario Visuals)
+    enemyProjectiles.forEach(ep => {
+        if (ep.type === 'FLAK') {
+            if (scn.id === 'SCIFI') {
+                // Ion Beam Pulse
+                ctx.fillStyle = '#f72585';
+                ctx.fillRect(Math.round(ep.x) - 1, Math.round(ep.y) - 2, 3, 5);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(Math.round(ep.x), Math.round(ep.y) - 1, 1, 3);
+            } else if (scn.id === 'WWII') {
+                // Cordite Smoke Flak Burst
+                ctx.fillStyle = '#ffb703';
+                ctx.fillRect(Math.round(ep.x) - 1, Math.round(ep.y) - 1, 3, 3);
+                ctx.fillStyle = '#212529';
+                ctx.fillRect(Math.round(ep.x), Math.round(ep.y) + 2, 2, 2);
+            } else {
+                ctx.fillStyle = '#ffbe0b';
+                ctx.fillRect(Math.round(ep.x) - 1, Math.round(ep.y) - 1, 3, 3);
+                ctx.fillStyle = '#ef233c';
+                ctx.fillRect(Math.round(ep.x), Math.round(ep.y) + 2, 2, 3);
+            }
+        } else if (ep.type === 'TORPEDO') {
+            if (scn.id === 'SCIFI') {
+                // Atmospheric Photon Dart
+                ctx.fillStyle = '#4cc9f0';
+                ctx.fillRect(Math.round(ep.x) - 1, Math.round(ep.y) - 3, 3, 6);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(Math.round(ep.x), Math.round(ep.y) - 2, 1, 3);
+                ctx.fillStyle = '#7209b7';
+                ctx.fillRect(Math.round(ep.x), Math.round(ep.y) + 3, 1, 3);
+            } else if (scn.id === 'WWII') {
+                // Compressed Air Steam Torpedo
+                ctx.fillStyle = '#adb5bd';
+                ctx.fillRect(Math.round(ep.x) - 1, Math.round(ep.y) - 3, 3, 2);
+                ctx.fillStyle = '#495057';
+                ctx.fillRect(Math.round(ep.x) - 1, Math.round(ep.y) - 1, 3, 5);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(Math.round(ep.x), Math.round(ep.y) + 4, 1, 3);
+            } else {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(Math.round(ep.x) - 1, Math.round(ep.y) - 3, 3, 2);
+                ctx.fillStyle = '#00f5d4';
+                ctx.fillRect(Math.round(ep.x) - 1, Math.round(ep.y) - 1, 3, 5);
+                ctx.fillStyle = '#ef233c';
+                ctx.fillRect(Math.round(ep.x), Math.round(ep.y) + 4, 1, 2);
+            }
+        }
+    });
+
+    // 7. Draw Particles (Splashes, Bubbles, Explosions)
+    particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+    });
+
+    // 8. Floating Score / Alert Popups
+    ctx.font = '7.5px "Press Start 2P", monospace';
+    ctx.textAlign = 'center';
+    floatingTexts.forEach(ft => {
+        ctx.fillStyle = '#000';
+        ctx.fillText(ft.text, Math.round(ft.x) + 1, Math.round(ft.y) + 1);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, Math.round(ft.x), Math.round(ft.y));
+    });
+
+    // 9. Top HUD Bar
+    drawHUD();
+
+    // 10. Game State Overlays
+    if (gameState === 'START') {
+        drawOverlayScreen(
+            scn.badge,
+            `${scn.subBadge} • 10 SECTORS`,
+            `CRAFT: ${scn.planeName}`,
+            `RECORD: ${highScore.toString().padStart(5, '0')} (${leaderboard[0] ? leaderboard[0].name : 'ACE'}) [${leaderboard[0] ? (leaderboard[0].theater || 'M90') : 'M90'}]`,
+            'PRESS SPACE TO LAUNCH  [T] THEATER'
+        );
+    } else if (gameState === 'THEATER_SELECT') {
+        drawTheaterSelectScreen();
+    } else if (gameState === 'WAVE_CLEAR') {
+        const nextCfg = LEVELS_CONFIG[Math.min(wave, LEVELS_CONFIG.length - 1)];
+        const warning = (nextCfg.flakRate ? '[FLAK] ' : '') + (nextCfg.torpedoRate ? '[TORPEDOES] ' : '') + (nextCfg.evasive ? '[EVASIVE]' : '');
+        drawOverlayScreen(
+            `SECTOR ${wave} SECURED!`,
+            `AMMO BONUS: +${lastWaveBonus} PTS`,
+            `NEXT: ${nextCfg.title}`,
+            warning ? `ALERT: ${warning}` : 'PREPARING SQUADRON...',
+            'GET READY!'
+        );
+    } else if (gameState === 'GAME_VICTORY') {
+        drawOverlayScreen(
+            '★ CAMPAIGN VICTORY! ★',
+            'ALL 10 SECTORS SECURED!',
+            `FINAL SCORE: ${score} PTS`,
+            `SURVIVOR BONUS: +${lastWaveBonus} PTS`,
+            'PRESS SPACE TO ENTER HALL OF FAME'
+        );
+    } else if (gameState === 'GAMEOVER') {
+        const qualifies = checkQualifiesForLeaderboard(score);
+        drawOverlayScreen(
+            gameOverReason || 'MISSION FAILED!',
+            `FINAL SCORE: ${score}`,
+            qualifies ? 'NEW TOP 5 RECORD QUALIFIED!' : `HIGH SCORE: ${highScore}`,
+            `REACHED SECTOR ${wave}/10`,
+            qualifies ? 'PRESS SPACE TO ENTER INITIALS' : 'PRESS SPACE FOR HIGH SCORES'
+        );
+    } else if (gameState === 'ENTER_INITIALS') {
+        drawEnterInitialsScreen();
+    } else if (gameState === 'LEADERBOARD') {
+        drawLeaderboardScreen();
+    }
+
+    ctx.restore();
+}
+
+function drawHUD() {
+    const scn = getCurrentScenario();
+    ctx.fillStyle = 'rgba(11, 13, 23, 0.88)';
+    ctx.fillRect(0, 0, W, 14);
+
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`SC:${score.toString().padStart(5, '0')}`, 4, 10);
+
+    ctx.fillStyle = '#ffbe0b';
+    ctx.fillText(`HI:${highScore.toString().padStart(5, '0')}`, 70, 10);
+
+    ctx.fillStyle = scn.accentColor;
+    ctx.fillText(`SEC:${wave.toString().padStart(2, '0')}/10`, 136, 10);
+
+    // Aircraft Hull / Shields
+    ctx.fillStyle = '#8d99ae';
+    ctx.fillText(`${scn.livesName}:`, 205, 10);
+    for (let l = 0; l < 3; l++) {
+        const lx = 248 + l * 9;
+        if (l < plane.lives) {
+            ctx.fillStyle = scn.id === 'SCIFI' ? '#4cc9f0' : (scn.id === 'WWII' ? '#dda15e' : '#06d6a0');
+            ctx.fillRect(lx, 6, 6, 2);
+            ctx.fillRect(lx + 2, 4, 2, 6);
+            ctx.fillRect(lx + 5, 5, 1, 4);
+        } else {
+            ctx.fillStyle = '#ef233c';
+            ctx.fillRect(lx + 1, 6, 4, 2);
+        }
+    }
+
+    // Remaining ammo counter
+    ctx.textAlign = 'right';
+    ctx.fillStyle = bombsRemaining <= 3 ? '#ef233c' : (scn.id === 'SCIFI' ? '#f72585' : '#06d6a0');
+    ctx.fillText(`${scn.ammoShort}:${bombsRemaining.toString().padStart(2, '0')}`, W - 4, 10);
+}
+
+function drawOverlayScreen(title, line1, line2, line3, prompt) {
+    ctx.fillStyle = 'rgba(10, 12, 20, 0.88)';
+    ctx.fillRect(20, 52, W - 40, 166);
+    ctx.strokeStyle = '#ffbe0b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(20, 52, W - 40, 166);
+
+    ctx.textAlign = 'center';
+
+    ctx.font = '11.5px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffbe0b';
+    ctx.fillText(title, W / 2, 80);
+
+    ctx.font = '6.5px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(line1, W / 2, 108);
+
+    ctx.fillStyle = '#a8dadc';
+    ctx.fillText(line2, W / 2, 125);
+
+    ctx.fillStyle = '#00f5d4';
+    ctx.fillText(line3, W / 2, 142);
+
+    // Blinking arcade prompt
+    if (Math.floor(Date.now() / 400) % 2 === 0) {
+        ctx.fillStyle = '#ef233c';
+        ctx.fillText(prompt, W / 2, 196);
+    }
+}
+
+function drawEnterInitialsScreen() {
+    ctx.fillStyle = 'rgba(10, 12, 20, 0.92)';
+    ctx.fillRect(18, 24, W - 36, 222);
+    ctx.strokeStyle = '#00f5d4';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(18, 24, W - 36, 222);
+
+    ctx.textAlign = 'center';
+    ctx.font = '11px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffbe0b';
+    ctx.fillText('★ NEW HIGH SCORE! ★', W / 2, 50);
+
+    const rank = getLeaderboardRank(score);
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`SCORE: ${score.toString().padStart(5, '0')}  |  RANK: #${rank}`, W / 2, 69);
+
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillStyle = '#a8dadc';
+    ctx.fillText('ENTER YOUR PILOT INITIALS', W / 2, 88);
+
+    // Letter Slots
+    const slotX = [135, 180, 225];
+    const slotY = 124;
+
+    for (let i = 0; i < 3; i++) {
+        const x = slotX[i];
+        const isCurrent = (i === initialCursor);
+
+        // Slot Box
+        ctx.fillStyle = isCurrent ? '#1d3557' : '#141824';
+        ctx.fillRect(x - 16, slotY - 14, 32, 28);
+        ctx.strokeStyle = isCurrent ? '#00f5d4' : '#4a506b';
+        ctx.lineWidth = isCurrent ? 2 : 1;
+        ctx.strokeRect(x - 16, slotY - 14, 32, 28);
+
+        // Arrows if current slot
+        if (isCurrent) {
+            ctx.fillStyle = Math.floor(Date.now() / 250) % 2 === 0 ? '#ffbe0b' : '#00f5d4';
+            ctx.beginPath();
+            ctx.moveTo(x, slotY - 21);
+            ctx.lineTo(x - 6, slotY - 15);
+            ctx.lineTo(x + 6, slotY - 15);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(x, slotY + 21);
+            ctx.lineTo(x - 6, slotY + 15);
+            ctx.lineTo(x + 6, slotY + 15);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // Letter
+        ctx.font = '14px "Press Start 2P", monospace';
+        ctx.fillStyle = isCurrent ? '#ffffff' : '#8d99ae';
+        ctx.fillText(initials[i], x, slotY + 6);
+    }
+
+    // Interactive Confirm Button on Canvas
+    ctx.fillStyle = '#ef233c';
+    ctx.fillRect(W / 2 - 45, 164, 90, 20);
+    ctx.strokeStyle = '#ff758f';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(W / 2 - 45, 164, 90, 20);
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('CONFIRM', W / 2, 177);
+
+    // Hints
+    ctx.font = '5.5px "Press Start 2P", monospace';
+    ctx.fillStyle = '#8d99ae';
+    ctx.fillText('[TYPE/↑↓] CHANGE   [←→] SLOT', W / 2, 202);
+    ctx.fillText('[ENTER / SPACE] CONFIRM INITIAL', W / 2, 217);
+}
+
+function drawLeaderboardScreen() {
+    ctx.fillStyle = 'rgba(10, 12, 20, 0.92)';
+    ctx.fillRect(16, 22, W - 32, 226);
+    ctx.strokeStyle = '#ffbe0b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(16, 22, W - 32, 226);
+
+    ctx.strokeStyle = '#00f5d4';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(19, 25, W - 38, 220);
+
+    ctx.textAlign = 'center';
+    ctx.font = '11px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffbe0b';
+    ctx.fillText('★ HALL OF FAME ★', W / 2, 44);
+
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillStyle = '#00f5d4';
+    ctx.fillText('TOP BOMBER PILOTS BY THEATER', W / 2, 57);
+
+    // Header row
+    ctx.font = '6.5px "Press Start 2P", monospace';
+    ctx.fillStyle = '#8d99ae';
+    ctx.textAlign = 'left';
+    ctx.fillText('RNK', 26, 76);
+    ctx.fillText('PILOT', 68, 76);
+    ctx.fillText('ERA', 126, 76);
+    ctx.fillText('SCORE', 178, 76);
+    ctx.fillText('SECTOR', 260, 76);
+
+    ctx.fillStyle = '#323852';
+    ctx.fillRect(26, 81, W - 52, 2);
+
+    const rankLabels = ['1ST', '2ND', '3RD', '4TH', '5TH'];
+    const rankColors = ['#ffbe0b', '#00f5d4', '#ff9f1c', '#e0e6ed', '#e0e6ed'];
+
+    leaderboard.forEach((entry, idx) => {
+        if (idx >= 5) return;
+        const y = 98 + idx * 22;
+        const isNew = (idx === lastInsertedIndex);
+
+        if (isNew) {
+            ctx.fillStyle = Math.floor(Date.now() / 250) % 2 === 0 
+                ? 'rgba(0, 245, 212, 0.22)' 
+                : 'rgba(255, 190, 11, 0.22)';
+            ctx.fillRect(24, y - 11, W - 48, 17);
+        }
+
+        ctx.font = '7px "Press Start 2P", monospace';
+        ctx.textAlign = 'left';
+
+        ctx.fillStyle = rankColors[idx] || '#e0e6ed';
+        ctx.fillText(rankLabels[idx] || `${idx + 1}TH`, 26, y);
+
+        ctx.fillStyle = isNew ? '#ffffff' : '#e0e6ed';
+        ctx.fillText(entry.name.padEnd(3, ' '), 72, y);
+
+        const eraTag = entry.theater || 'M90';
+        ctx.fillStyle = eraTag === 'W43' ? '#dda15e' : (eraTag === 'S90' ? '#f72585' : '#00f5d4');
+        ctx.fillText(eraTag, 126, y);
+
+        ctx.fillStyle = isNew ? '#00f5d4' : '#ffffff';
+        ctx.fillText(entry.score.toString().padStart(5, '0'), 178, y);
+
+        ctx.fillStyle = '#ffbe0b';
+        ctx.fillText(`SEC ${entry.wave.toString().padStart(2, '0')}`, 260, y);
+
+        if (isNew) {
+            ctx.fillStyle = '#ef233c';
+            ctx.fillText('*', 324, y);
+        }
+    });
+
+    ctx.textAlign = 'center';
+    if (Math.floor(Date.now() / 400) % 2 === 0) {
+        ctx.font = '6.5px "Press Start 2P", monospace';
+        ctx.fillStyle = '#ef233c';
+        ctx.fillText('PRESS SPACE OR CLICK TO PLAY', W / 2, 228);
+    }
+}
+
+function drawTheaterSelectScreen() {
+    ctx.fillStyle = 'rgba(8, 10, 18, 0.94)';
+    ctx.fillRect(14, 16, W - 28, 238);
+    ctx.strokeStyle = '#ffbe0b';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(14, 16, W - 28, 238);
+
+    ctx.strokeStyle = '#00f5d4';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(17, 19, W - 34, 232);
+
+    ctx.textAlign = 'center';
+    ctx.font = '10.5px "Press Start 2P", monospace';
+    ctx.fillStyle = '#ffbe0b';
+    ctx.fillText('★ SELECT WAR THEATER ★', W / 2, 36);
+
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillStyle = '#00f5d4';
+    ctx.fillText('CHOOSE ERA & WEAPON PROFILE', W / 2, 48);
+
+    const THEATERS = [
+        {
+            key: 'WWII',
+            num: '1',
+            title: 'ATLANTIC 1943',
+            sub: 'AEROSILURANTE vs U-BOOT',
+            details: 'PROP BOMBER • OCEAN CONVOYS • HYDRO BOMBS',
+            color: '#dda15e',
+            scn: SCENARIOS.WWII
+        },
+        {
+            key: 'MODERN',
+            num: '2',
+            title: 'MODERN 1990',
+            sub: 'STRIKE JET vs NUCLEAR SUBS',
+            details: 'INTERDICTION JET • MISSILE FLEET • SMART BOMBS',
+            color: '#00f5d4',
+            scn: SCENARIOS.MODERN
+        },
+        {
+            key: 'SCIFI',
+            num: '3',
+            title: 'ORBITAL 2190',
+            sub: 'STAR CORVETTE vs DRONES',
+            details: 'HIGH ORBIT • PLANET ATMOSPHERE • PLASMA DARTS',
+            color: '#f72585',
+            scn: SCENARIOS.SCIFI
+        }
+    ];
+
+    const cardY = [56, 110, 164];
+    const cardH = 48;
+    const cardW = 308;
+    const cardX = 26;
+
+    THEATERS.forEach((th, idx) => {
+        const y = cardY[idx];
+        const isSelected = (idx === selectedTheaterIndex);
+        const isActive = (th.key === currentScenarioKey);
+
+        // Card container
+        ctx.fillStyle = isSelected ? 'rgba(29, 53, 87, 0.75)' : 'rgba(16, 20, 32, 0.65)';
+        ctx.fillRect(cardX, y, cardW, cardH);
+
+        ctx.strokeStyle = isSelected ? th.color : '#323852';
+        ctx.lineWidth = isSelected ? 2 : 1;
+        ctx.strokeRect(cardX, y, cardW, cardH);
+
+        // Header indicator
+        ctx.textAlign = 'left';
+        ctx.font = '7px "Press Start 2P", monospace';
+        ctx.fillStyle = isSelected ? '#ffffff' : th.color;
+        const selector = isSelected ? '► ' : '  ';
+        ctx.fillText(`${selector}[${th.num}] ${th.title}`, cardX + 10, y + 14);
+
+        if (isActive) {
+            ctx.fillStyle = '#06d6a0';
+            ctx.font = '5.5px "Press Start 2P", monospace';
+            ctx.fillText('[ACTIVE]', cardX + 172, y + 14);
+        }
+
+        // Subtitle
+        ctx.font = '5.5px "Press Start 2P", monospace';
+        ctx.fillStyle = '#a8dadc';
+        ctx.fillText(th.sub, cardX + 16, y + 27);
+
+        // Tech details
+        ctx.font = '5px "Press Start 2P", monospace';
+        ctx.fillStyle = '#8d99ae';
+        ctx.fillText(th.details, cardX + 16, y + 39);
+
+        // Mini preview sprites on the right side of card
+        const previewPlaneX = cardX + 252;
+        const previewSubX = cardX + 284;
+        drawMatrixSprite(th.scn.planeSprite, previewPlaneX, y + 16, false, 1);
+        drawMatrixSprite(th.scn.subSprite, previewSubX, y + 33, true, 1);
+    });
+
+    // Bottom action prompts
+    ctx.textAlign = 'center';
+    ctx.font = '6px "Press Start 2P", monospace';
+    ctx.fillStyle = '#8d99ae';
+    ctx.fillText('[1, 2, 3 / ↑↓] SELECT THEATER   [ENTER / SPACE] CONFIRM', W / 2, 226);
+
+    if (Math.floor(Date.now() / 400) % 2 === 0) {
+        ctx.fillStyle = '#ffbe0b';
+        ctx.fillText('PRESS [SPACE] OR CLICK CARD TO PLAY', W / 2, 240);
+    }
+}
+
+// ==========================================
+// 8. MAIN ANIMATION LOOP
+// ==========================================
+let lastTime = 0;
+function gameLoop(timestamp) {
+    if (!lastTime) lastTime = timestamp;
+    const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+    lastTime = timestamp;
+
+    update(dt);
+    draw();
+
+    requestAnimationFrame(gameLoop);
+}
+
+// ==========================================
+// 9. KEYBOARD, MOUSE & TOUCH INPUT HANDLERS
+// ==========================================
+const btnDrop = document.getElementById('btnDrop');
+const btnSlow = document.getElementById('btnSlow');
+const btnFast = document.getElementById('btnFast');
+const btnFlip = document.getElementById('btnFlip');
+const muteBtn = document.getElementById('muteBtn');
+const scoresBtn = document.getElementById('scoresBtn');
+const theaterBtn = document.getElementById('theaterBtn');
+const hintText = document.getElementById('hintText');
+
+function updateControlsUI() {
+    if (!btnDrop || !btnSlow || !btnFast || !btnFlip) return;
+    if (gameState === 'THEATER_SELECT') {
+        btnSlow.textContent = "PREV ERA (←)";
+        btnFast.textContent = "NEXT ERA (→)";
+        btnFlip.textContent = "SELECT (1-3)";
+        btnDrop.textContent = "CONFIRM & PLAY (OK)";
+        if (hintText) {
+            hintText.innerHTML = '[1, 2, 3 / ← →] Select Theater &nbsp;|&nbsp; [SPACE] Launch Mission &nbsp;|&nbsp; [T] Close';
+        }
+    } else if (gameState === 'ENTER_INITIALS') {
+        btnSlow.textContent = "CHAR ▲ (W)";
+        btnFast.textContent = "CHAR ▼ (S)";
+        btnFlip.textContent = "SLOT → (D)";
+        btnDrop.textContent = "CONFIRM (OK)";
+        if (hintText) {
+            hintText.innerHTML = '[TYPE/↑↓] Change Letter &nbsp;|&nbsp; [← →] Move Slot &nbsp;|&nbsp; [SPACE/ENTER] Confirm';
+        }
+    } else if (gameState === 'LEADERBOARD') {
+        btnSlow.textContent = "SLOW (←)";
+        btnFast.textContent = "FAST (→)";
+        btnFlip.textContent = "TITLE (H)";
+        btnDrop.textContent = "PLAY AGAIN (SPACE)";
+        if (hintText) {
+            hintText.innerHTML = '[SPACE / CLICK] Start Mission &nbsp;|&nbsp; [T] Theaters &nbsp;|&nbsp; [H] Title Screen';
+        }
+    } else if (gameState === 'GAME_VICTORY') {
+        btnSlow.textContent = "SLOW (←)";
+        btnFast.textContent = "FAST (→)";
+        btnFlip.textContent = "SCORES (H)";
+        btnDrop.textContent = "HALL OF FAME (SPACE)";
+        if (hintText) {
+            hintText.innerHTML = '★ CAMPAIGN VICTORY! ★ Press [SPACE] to enter Hall of Fame!';
+        }
+    } else if (gameState === 'GAMEOVER') {
+        const qualifies = checkQualifiesForLeaderboard(score);
+        btnSlow.textContent = "SLOW (←)";
+        btnFast.textContent = "FAST (→)";
+        btnFlip.textContent = "SCORES (H)";
+        btnDrop.textContent = qualifies ? "ENTER NAME (SPACE)" : "VIEW SCORES (SPACE)";
+        if (hintText) {
+            hintText.innerHTML = qualifies 
+                ? '★ NEW RECORD! ★ Press [SPACE] to enter initials' 
+                : 'Press [SPACE] for Hall of Fame or [T] to change Theater';
+        }
+    } else if (gameState === 'START') {
+        btnSlow.textContent = "SLOW DOWN (←)";
+        btnFast.textContent = "SPEED UP (→)";
+        btnFlip.textContent = "THEATER (T)";
+        btnDrop.textContent = "LAUNCH MISSION (SPACE)";
+        if (hintText) {
+            hintText.innerHTML = '[SPACE / CLICK] Launch &nbsp;|&nbsp; [T] Select Theater &nbsp;|&nbsp; [← →] Airspeed &nbsp;|&nbsp; [I] Flip &nbsp;|&nbsp; [H] High Scores';
+        }
+    } else if (gameState === 'PLAYING') {
+        btnSlow.textContent = "SLOW DOWN (←)";
+        btnFast.textContent = "SPEED UP (→)";
+        btnFlip.textContent = "FLIP DIR (I)";
+        btnDrop.textContent = "DROP BOMB (SPACE)";
+        if (hintText) {
+            hintText.innerHTML = '[SPACE / CLICK] Drop Depth Charge &nbsp;|&nbsp; [← →] Adjust Airspeed &nbsp;|&nbsp; [I] Flip Direction';
+        }
+    }
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyT') {
+        e.preventDefault();
+        if (gameState === 'THEATER_SELECT') {
+            gameState = 'START';
+        } else if (gameState === 'START' || gameState === 'LEADERBOARD' || gameState === 'GAMEOVER' || gameState === 'GAME_VICTORY') {
+            selectedTheaterIndex = THEATER_KEYS.indexOf(currentScenarioKey);
+            if (selectedTheaterIndex === -1) selectedTheaterIndex = 1;
+            gameState = 'THEATER_SELECT';
+        }
+        updateControlsUI();
+        return;
+    }
+
+    if (gameState === 'THEATER_SELECT') {
+        if (e.code === 'Digit1' || e.code === 'Numpad1') {
+            e.preventDefault();
+            selectedTheaterIndex = 0;
+            setScenario('WWII');
+            audio.playBlip(true);
+            return;
+        }
+        if (e.code === 'Digit2' || e.code === 'Numpad2') {
+            e.preventDefault();
+            selectedTheaterIndex = 1;
+            setScenario('MODERN');
+            audio.playBlip(true);
+            return;
+        }
+        if (e.code === 'Digit3' || e.code === 'Numpad3') {
+            e.preventDefault();
+            selectedTheaterIndex = 2;
+            setScenario('SCIFI');
+            audio.playBlip(true);
+            return;
+        }
+        if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'ArrowLeft' || e.code === 'KeyA') {
+            e.preventDefault();
+            selectedTheaterIndex = (selectedTheaterIndex + 2) % 3;
+            setScenario(THEATER_KEYS[selectedTheaterIndex]);
+            audio.playBlip(false);
+            return;
+        }
+        if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.code === 'ArrowRight' || e.code === 'KeyD') {
+            e.preventDefault();
+            selectedTheaterIndex = (selectedTheaterIndex + 1) % 3;
+            setScenario(THEATER_KEYS[selectedTheaterIndex]);
+            audio.playBlip(false);
+            return;
+        }
+        if (e.code === 'Space' || e.code === 'Enter') {
+            e.preventDefault();
+            startGame();
+            return;
+        }
+        if (e.code === 'Escape') {
+            e.preventDefault();
+            gameState = 'START';
+            updateControlsUI();
+            return;
+        }
+        return;
+    }
+
+    if (gameState === 'ENTER_INITIALS') {
+        if (e.key && e.key.length === 1) {
+            const char = e.key.toUpperCase();
+            if (ALLOWED_CHARS.includes(char)) {
+                e.preventDefault();
+                initials[initialCursor] = char;
+                advanceInitial();
+                return;
+            }
+        }
+        if (e.code === 'Backspace') {
+            e.preventDefault();
+            audio.playBlip(false);
+            initials[initialCursor] = 'A';
+            if (initialCursor > 0) initialCursor--;
+            return;
+        }
+        if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+            e.preventDefault();
+            changeChar(1);
+            return;
+        }
+        if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+            e.preventDefault();
+            changeChar(-1);
+            return;
+        }
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+            e.preventDefault();
+            prevInitial();
+            return;
+        }
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+            e.preventDefault();
+            advanceInitial();
+            return;
+        }
+        if (e.code === 'Space' || e.code === 'Enter') {
+            e.preventDefault();
+            advanceInitial();
+            return;
+        }
+        return;
+    }
+
+    if (e.code === 'KeyH') {
+        e.preventDefault();
+        if (gameState === 'LEADERBOARD') {
+            gameState = 'START';
+        } else if (gameState === 'START' || gameState === 'GAMEOVER' || gameState === 'GAME_VICTORY') {
+            lastInsertedIndex = -1;
+            gameState = 'LEADERBOARD';
+        }
+        updateControlsUI();
+        return;
+    }
+
+    if (e.code === 'Space') {
+        e.preventDefault();
+        if (gameState === 'START' || gameState === 'LEADERBOARD') {
+            startGame();
+        } else if (gameState === 'GAME_VICTORY') {
+            if (checkQualifiesForLeaderboard(score)) {
+                initEnterInitials();
+                gameState = 'ENTER_INITIALS';
+            } else {
+                gameState = 'LEADERBOARD';
+            }
+            updateControlsUI();
+        } else if (gameState === 'GAMEOVER') {
+            if (checkQualifiesForLeaderboard(score)) {
+                initEnterInitials();
+                gameState = 'ENTER_INITIALS';
+            } else {
+                gameState = 'LEADERBOARD';
+            }
+            updateControlsUI();
+        } else if (gameState === 'PLAYING') {
+            dropBomb();
+        }
+    } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+        keys.left = true;
+    } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        keys.right = true;
+    } else if (e.code === 'KeyI') {
+        flipPlaneDirection();
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+        keys.left = false;
+    } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        keys.right = false;
+    }
+});
+
+// Canvas click/tap interaction
+canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const cx = (e.clientX - rect.left) * scaleX;
+    const cy = (e.clientY - rect.top) * scaleY;
+
+    if (gameState === 'THEATER_SELECT') {
+        const cardY = [56, 110, 164];
+        const cardH = 48;
+        const cardX = 26;
+        const cardW = 308;
+        let clickedCard = -1;
+        for (let i = 0; i < 3; i++) {
+            if (cx >= cardX && cx <= cardX + cardW && cy >= cardY[i] && cy <= cardY[i] + cardH) {
+                clickedCard = i;
+                break;
+            }
+        }
+        if (clickedCard !== -1) {
+            if (selectedTheaterIndex === clickedCard) {
+                setScenario(THEATER_KEYS[clickedCard]);
+                startGame();
+            } else {
+                selectedTheaterIndex = clickedCard;
+                setScenario(THEATER_KEYS[clickedCard]);
+                audio.playBlip(true);
+            }
+            return;
+        }
+        if (cy >= 220 && cy <= 250) {
+            startGame();
+            return;
+        }
+        return;
+    }
+
+    if (gameState === 'START' || gameState === 'LEADERBOARD') {
+        startGame();
+    } else if (gameState === 'GAME_VICTORY') {
+        if (checkQualifiesForLeaderboard(score)) {
+            initEnterInitials();
+            gameState = 'ENTER_INITIALS';
+        } else {
+            gameState = 'LEADERBOARD';
+        }
+        updateControlsUI();
+    } else if (gameState === 'GAMEOVER') {
+        if (checkQualifiesForLeaderboard(score)) {
+            initEnterInitials();
+            gameState = 'ENTER_INITIALS';
+        } else {
+            gameState = 'LEADERBOARD';
+        }
+        updateControlsUI();
+    } else if (gameState === 'ENTER_INITIALS') {
+        const slotX = [135, 180, 225];
+        const slotY = 124;
+
+        for (let i = 0; i < 3; i++) {
+            const x = slotX[i];
+            if (cx >= x - 18 && cx <= x + 18 && cy >= slotY - 26 && cy < slotY - 10) {
+                initialCursor = i;
+                changeChar(1);
+                return;
+            }
+            if (cx >= x - 18 && cx <= x + 18 && cy > slotY + 10 && cy <= slotY + 26) {
+                initialCursor = i;
+                changeChar(-1);
+                return;
+            }
+            if (cx >= x - 16 && cx <= x + 16 && cy >= slotY - 14 && cy <= slotY + 14) {
+                initialCursor = i;
+                audio.playBlip(false);
+                return;
+            }
+        }
+
+        if (cx >= W / 2 - 45 && cx <= W / 2 + 45 && cy >= 164 && cy <= 184) {
+            advanceInitial();
+            return;
+        }
+    } else if (gameState === 'PLAYING') {
+        dropBomb();
+    }
+});
+
+// On-screen tactile buttons
+btnDrop.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (gameState === 'THEATER_SELECT') {
+        startGame();
+    } else if (gameState === 'START' || gameState === 'LEADERBOARD') {
+        startGame();
+    } else if (gameState === 'GAME_VICTORY') {
+        if (checkQualifiesForLeaderboard(score)) {
+            initEnterInitials();
+            gameState = 'ENTER_INITIALS';
+        } else {
+            gameState = 'LEADERBOARD';
+        }
+        updateControlsUI();
+    } else if (gameState === 'GAMEOVER') {
+        if (checkQualifiesForLeaderboard(score)) {
+            initEnterInitials();
+            gameState = 'ENTER_INITIALS';
+        } else {
+            gameState = 'LEADERBOARD';
+        }
+        updateControlsUI();
+    } else if (gameState === 'ENTER_INITIALS') {
+        advanceInitial();
+    } else if (gameState === 'PLAYING') {
+        dropBomb();
+    }
+});
+
+btnFlip.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (gameState === 'THEATER_SELECT') {
+        selectedTheaterIndex = (selectedTheaterIndex + 1) % 3;
+        setScenario(THEATER_KEYS[selectedTheaterIndex]);
+        audio.playBlip(true);
+    } else if (gameState === 'START') {
+        selectedTheaterIndex = THEATER_KEYS.indexOf(currentScenarioKey);
+        if (selectedTheaterIndex === -1) selectedTheaterIndex = 1;
+        gameState = 'THEATER_SELECT';
+        updateControlsUI();
+    } else if (gameState === 'ENTER_INITIALS') {
+        initialCursor = (initialCursor + 1) % 3;
+        audio.playBlip(false);
+    } else if (gameState === 'LEADERBOARD') {
+        gameState = 'START';
+        updateControlsUI();
+    } else if (gameState === 'PLAYING') {
+        flipPlaneDirection();
+    }
+});
+
+btnSlow.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (gameState === 'THEATER_SELECT') {
+        selectedTheaterIndex = (selectedTheaterIndex + 2) % 3;
+        setScenario(THEATER_KEYS[selectedTheaterIndex]);
+        audio.playBlip(false);
+    } else if (gameState === 'ENTER_INITIALS') {
+        changeChar(1);
+    } else if (gameState === 'PLAYING') {
+        keys.left = true;
+    }
+});
+btnSlow.addEventListener('pointerup', () => { keys.left = false; });
+btnSlow.addEventListener('pointerleave', () => { keys.left = false; });
+
+btnFast.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (gameState === 'THEATER_SELECT') {
+        selectedTheaterIndex = (selectedTheaterIndex + 1) % 3;
+        setScenario(THEATER_KEYS[selectedTheaterIndex]);
+        audio.playBlip(false);
+    } else if (gameState === 'ENTER_INITIALS') {
+        changeChar(-1);
+    } else if (gameState === 'PLAYING') {
+        keys.right = true;
+    }
+});
+btnFast.addEventListener('pointerup', () => { keys.right = false; });
+btnFast.addEventListener('pointerleave', () => { keys.right = false; });
+
+scoresBtn.addEventListener('click', () => {
+    if (gameState === 'LEADERBOARD') {
+        gameState = 'START';
+    } else if (gameState === 'START' || gameState === 'GAMEOVER' || gameState === 'GAME_VICTORY' || gameState === 'THEATER_SELECT') {
+        lastInsertedIndex = -1;
+        gameState = 'LEADERBOARD';
+    }
+    updateControlsUI();
+});
+
+if (theaterBtn) {
+    theaterBtn.addEventListener('click', () => {
+        if (gameState === 'THEATER_SELECT') {
+            gameState = 'START';
+        } else if (gameState === 'START' || gameState === 'LEADERBOARD' || gameState === 'GAMEOVER' || gameState === 'GAME_VICTORY') {
+            selectedTheaterIndex = THEATER_KEYS.indexOf(currentScenarioKey);
+            if (selectedTheaterIndex === -1) selectedTheaterIndex = 1;
+            gameState = 'THEATER_SELECT';
+        }
+        updateControlsUI();
+    });
+}
+
+muteBtn.addEventListener('click', () => {
+    const isAudioOn = audio.toggleMute();
+    muteBtn.textContent = isAudioOn ? 'SOUND: ON' : 'SOUND: OFF';
+    muteBtn.classList.toggle('active', isAudioOn);
+});
+
+// Start loop on window load
+window.onload = function () {
+    setScenario(currentScenarioKey);
+    updateControlsUI();
+    requestAnimationFrame(gameLoop);
+};
+</script>
+</body>
+</html>

@@ -120,6 +120,12 @@
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             cursor: crosshair;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        canvas:focus {
+            outline: none;
         }
 
         .crt-overlay {
@@ -207,7 +213,7 @@
 
     <div class="screen-wrapper" id="screenWrapper">
         <!-- Virtual low-res canvas (360x270) upscaled with crisp pixels -->
-        <canvas id="gameCanvas" width="360" height="270"></canvas>
+        <canvas id="gameCanvas" width="360" height="270" tabindex="0"></canvas>
         <div class="crt-overlay"></div>
     </div>
 
@@ -2739,18 +2745,23 @@ window.addEventListener('keydown', (e) => {
             dropBomb();
         }
     } else if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+        e.preventDefault();
         keys.left = true;
     } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        e.preventDefault();
         keys.right = true;
     } else if (e.code === 'KeyI') {
+        e.preventDefault();
         flipPlaneDirection();
     }
 });
 
 window.addEventListener('keyup', (e) => {
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+        e.preventDefault();
         keys.left = false;
     } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+        e.preventDefault();
         keys.right = false;
     }
 });
@@ -2955,8 +2966,17 @@ muteBtn.addEventListener('click', () => {
     muteBtn.classList.toggle('active', isAudioOn);
 });
 
+// Auto-focus helper for iframe environments (e.g. Itch.io, web portals)
+function ensureGameFocus() {
+    window.focus();
+    if (canvas) canvas.focus();
+}
+window.addEventListener('pointerdown', ensureGameFocus, { passive: true });
+window.addEventListener('click', ensureGameFocus, { passive: true });
+
 // Start loop on window load
 window.onload = function () {
+    ensureGameFocus();
     setScenario(currentScenarioKey);
     updateControlsUI();
     requestAnimationFrame(gameLoop);

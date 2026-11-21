@@ -1,6 +1,10 @@
 # Depth Charge '90 🚀⚓
 
+![Depth Charge '90 Arcade Screenshot](screenshot.png)
+
 Un arcade retro ispirato ai classici giochi marittimi e spaziali dei primi anni '90, realizzato interamente in un **singolo file HTML5** con grafica Canvas pixel art proceduralmente renderizzata e motore sonoro sintetizzato in tempo reale tramite **Web Audio API** (nessun asset o dipendenza esterna).
+
+🎮 **[Gioca Subito Online (Zero Installazione su lhackyup.dev)](https://lhackyup.dev/fun/depth-charge-90/)**
 
 ---
 
@@ -37,7 +41,7 @@ Un arcade retro ispirato ai classici giochi marittimi e spaziali dei primi anni 
 
 ---
 
-## 🚀 Come Giocare
+## 🚀 Come Giocare in Locale
 
 Non serve alcun server o installazione:
 1. Clona il repository:
@@ -45,3 +49,14 @@ Non serve alcun server o installazione:
    git clone https://github.com/lhackyup/DepthCharge90.git
    ```
 2. Apri `depth_charge_90_retro_arcade.html` con qualsiasi browser moderno (Chrome, Firefox, Safari, Edge).
+
+---
+
+## 📄 Licenza / License
+
+Questo progetto è rilasciato sotto licenza **[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)](LICENSE)**.
+
+- **Condivisione & Fork**: Sei libero di clonare, studiare, remixare, modificare e adattare il codice.
+- **Attribuzione (BY)**: Devi sempre riconoscere la paternità originale a **lhackyup** ([https://github.com/lhackyup/DepthCharge90](https://github.com/lhackyup/DepthCharge90)) indicando le eventuali modifiche apportate.
+- **Non Commerciale (NC)**: È vietato l'uso del materiale (originale o derivato) per fini commerciali o di lucro economico diretto/indiretto.
+- **Condividi allo stesso modo (SA)**: Se modifichi o trasformi il materiale, devi distribuire la tua opera derivata sotto la stessa identica licenza CC BY-NC-SA 4.0.

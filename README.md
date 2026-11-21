@@ -32,6 +32,12 @@ Press **`[T]`** anytime on the title screen or during intermission to switch war
 | **Modern 1990 (`M90`)** | Naval Strike Jet | Nuclear Attack Subs & Missile Cruisers | Finned Smart Bombs | 90s FM arcade sweep, jet turbines, sonar pings, dynamic day/sunset/night/storm weather |
 | **Orbital 2190 (`S90`)** | Orbital Star Corvette | Atmospheric Interceptor Drones & Star Dreadnoughts | Pulsating Plasma Darts | Hyperbolic laser ramps, photon torpedoes, glowing ionospheric barrier |
 
+### 📸 Screenshots Gallery
+
+| 1. Theater Selection (`[T]`) | 2. Atlantic 1943 (`W43`) | 3. Orbital 2190 (`S90`) |
+| :---: | :---: | :---: |
+| ![Theaters](screenshot-1-theaters.png) | ![Atlantic 1943](screenshot-2-wwii.png) | ![Orbital 2190](screenshot-3-scifi.png) |
+
 ---
 
 ## 🛠️ Under the Hood: Technical Architecture
